@@ -17,7 +17,7 @@ class redBox(object):
     def _buildMenu(self, menu, *args):
         mc.popupMenu(redBox_name, e = True, dai = True)
         
-        mc.menuItem(p = menu, l = 'ÎûÎû', c = 'print "Ì«"')
-        mc.menuItem(p = menu, l = 'À­À­', rp = 'N', c = pm.Callback(pm.mel.eval, 'print "¹þ¹þ";'))
+        mc.menuItem(p = menu, l = 'ÃŽÃ»ÃŽÃ»', c = 'print "ÃŒÂ«"')
+        mc.menuItem(p = menu, l = 'Ã€Â­Ã€Â­', rp = 'N', c = pm.Callback(pm.mel.eval, 'print "hello";'))
 
 redBox()
