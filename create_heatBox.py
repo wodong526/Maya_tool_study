@@ -15,8 +15,8 @@ class redBox(object):
     
     def _buildMenu(self, menu, *args):
         mc.popupMenu(redBox_name, e = True, dai = True)
-        
         mc.menuItem(p = menu, l = '方向', c = 'print "ss"')
         mc.menuItem(p = menu, l = '下沉', rp = 'N', c = 'print "ll"')
+
 
 redBox()
