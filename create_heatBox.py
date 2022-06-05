@@ -1,5 +1,4 @@
 import maya.cmds as mc
-import pymel.core as pm
 
 redBox_name = 'haha'
 class redBox(object):
@@ -17,7 +16,7 @@ class redBox(object):
     def _buildMenu(self, menu, *args):
         mc.popupMenu(redBox_name, e = True, dai = True)
         
-        mc.menuItem(p = menu, l = 'ÎûÎû', c = 'print "Ì«"')
-        mc.menuItem(p = menu, l = 'À­À­', rp = 'N', c = pm.Callback(pm.mel.eval, 'print "¹ş¹ş";'))
+        mc.menuItem(p = menu, l = 'æ–¹å‘', c = 'print "ss"')
+        mc.menuItem(p = menu, l = 'ä¸‹æ²‰', rp = 'N', c = 'print "ll"')
 
 redBox()
