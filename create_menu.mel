@@ -1,0 +1,14 @@
+global string $gMainWindow;
+setParent $gMainWindow;
+menu  -to true -label "lala" new_window;
+//增加子集
+setParent -menu new_window;
+menuItem -to true -label "我的第一个插件";
+menuItem -divider true;
+menuItem -subMenu true -tearOff true -label "subMenu";
+    menuItem -label "怎么回事呢" -c "print \"怎么回事呢\"";
+    setParent -menu ..;
+menuItem -divider true;
+menuItem -tearOff true -label "这是父级";
+
+if (`menu -ex new_window`){deleteUI -menu new_window;}
