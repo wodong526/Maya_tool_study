@@ -1,4 +1,4 @@
-#api方法
+#api鏂规硶
 import pymel.core as pm
 import maya.OpenMaya as om
 
@@ -16,7 +16,7 @@ numFn.getDefault(u_ptr)
 print om.MScriptUtil.getDouble(u_ptr)
 
 
-#cmds方法
+#cmds鏂规硶
 import maya.cmds as mc
 
 print mc.attributeQuery('aaa', n = mc.ls(sl = 1)[0], ld = 1)
