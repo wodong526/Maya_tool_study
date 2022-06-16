@@ -5,6 +5,6 @@ def createMenu():
     if mc.menu(my_menu, ex = True):
         mc.deleteUI(my_menu)
     myWindow = pm.language.melGlobals['gMainWindow']
-    my_menu = pm.menu(to = True, l = '~ÃÈÃÈ²Ëµ¥À¸~', p = myWindow)
-    pm.menuItem(to = 1, p = my_menu, l = '²Ëµ¥1', c = 'print "²Ëµ¥Ò»"')
+    my_menu = pm.menu(to = True, l = '~èœå•~', p = myWindow)
+    pm.menuItem(to = 1, p = my_menu, l = 'èœå•ä¸€', c = 'print "å‘ç”Ÿä»€ä¹ˆäº‹äº†"')
 pmc.general.evalDeferred('createMenu()')
