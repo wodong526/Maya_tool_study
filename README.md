@@ -3,10 +3,15 @@
 ---
 ### **部分文件对应功能:**
 - appleCtrlConnectionBs：苹果控制器链接bs工具
+- arrangeTool：排布工具
 - autoCollisionSkirt：自碰撞裙子工具
 - batchExport_BS：批量导出bs工具
+- batchReplaceMap：批量替换贴图
+- bulletChat：在Maya中生成弹幕
+- calculatorTool：在Maya中生成计算器
+- centrumExclude：相机视锥剔除工具
 - charcoaleditor2：木炭编辑器2秘钥
-- create_heatBox
+- create_heatBox：创建自定义热盒
 - create_menu：创建菜单按钮
 - create_shelf：创建shelf工具按钮
 - customAverageTransformNodeCase：自定义平均位移节点案例
@@ -18,10 +23,9 @@
 - fromCircularModelCreateCurve：从环形模型中心生成曲线
 - fromCurveCreateSplineIk：从两条曲线生成曲面上的曲线ik
 - getAttr_default：获取属性的默认值
-- socket_Client：跨软件通信中的客户端
-- socket_server：跨软件通信中的服务器端
-- socket_client_case:套接字客户端案例
-- socket_server_case:套接字服务端案例（使用qt的套接字）
+- placeTool：刷草种树工具
+- retimeingTool：重排序时间工具，对应zurbrigg的retimingTool教程
+- trackTool：履带工具
 
 ---
 ### **更新日期:**
