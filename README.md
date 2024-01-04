@@ -1,7 +1,9 @@
 # **这里将存放我的一些Maya学习案例与心得。**
 
 ---
-### **部分文件对应功能:**
+### **插件文件:**
+- maskNode：自定义遮罩节点
+### **脚本文件:**
 - appleCtrlConnectionBs：苹果控制器链接bs工具
 - arrangeTool：排布工具
 - autoCollisionSkirt：自碰撞裙子工具
@@ -23,12 +25,16 @@
 - fromCircularModelCreateCurve：从环形模型中心生成曲线
 - fromCurveCreateSplineIk：从两条曲线生成曲面上的曲线ik
 - getAttr_default：获取属性的默认值
+- maskNodeUi：配合自定义遮罩节点的ui文件
 - placeTool：刷草种树工具
 - retimeingTool：重排序时间工具，对应zurbrigg的retimingTool教程
 - trackTool：履带工具
 
 ---
 ### **更新日期:**
+**2024.1.4**
+* 添加自定义遮罩节点案例文件
+
 **2023.11.21**
 * 添加跨软件通信的案例文件
 
