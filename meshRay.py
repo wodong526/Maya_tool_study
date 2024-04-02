@@ -293,7 +293,10 @@ class MeshRay(object):
                                     self._both_directions, None, hit_point, hit_ray_param, hit_face_ptr,
                                     hit_triangle_ptr, None, None)
 
-        return hit_point, hit_ray_param, hit_face_ptr, hit_triangle_ptr
+        if om.MScriptUtil().getInt(hit_face_ptr):
+            return hit_point, hit_ray_param, hit_face_ptr, hit_triangle_ptr
+        else:
+            return None
 
     def get_hit_mod(self):
         """
@@ -306,6 +309,8 @@ class MeshRay(object):
         self._info_dir.clear()
         if self._mod:
             ret = self.__shooting_core(self._mod)
+            if not ret:
+                return None
             self._info_dir[om.MFnDependencyNode(self._mod.object()).name()] = {'pos': ret[0], 'distance': ret[1],
                                                                                'face_id': ret[2],
                                                                                'triangular_id': ret[3]}
@@ -319,6 +324,8 @@ class MeshRay(object):
                     #如果不使用dag_path构造MFnMesh，调用closestIntersection时报错Must have a DAG path to do world space transforms
                     fn_mesh = om.MFnMesh(dag_path)
                     ret = self.__shooting_core(fn_mesh)
+                    if not ret:
+                        continue
                     self._info_dir[om.MFnDependencyNode(current_obj).name()] = {'pos': ret[0], 'distance': ret[1],
                                                                                 'face_id': ret[2],
                                                                                 'triangular_id': ret[3]}
