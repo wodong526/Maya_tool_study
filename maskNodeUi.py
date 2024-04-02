@@ -47,9 +47,7 @@ class DongHeaderWidget(QtWidgets.QWidget):
 
 
 class DongColorButton(QtWidgets.QWidget):
-
     color_changed = QtCore.Signal()
-
 
     def __init__(self, color=(1.0, 1.0, 1.0), parent=None):
         super(DongColorButton, self).__init__(parent)
@@ -82,7 +80,6 @@ class DongColorButton(QtWidgets.QWidget):
 
             mc.colorSliderGrp(self.get_full_name(), e=True, changeCommand=partial(self.on_color_changed))
 
-
         mc.deleteUI(window, window=True)
 
     def get_full_name(self):
@@ -114,8 +111,8 @@ class MyComboBox(QtWidgets.QComboBox):
         self.addItems(camera_lis)
         super(MyComboBox, self).showPopup()
 
-class DongShotMaskUi(QtWidgets.QDialog):
 
+class DongShotMaskUi(QtWidgets.QDialog):
     WINDOW_TITLE = u"遮罩创建工具"
 
     PLUG_IN_NAME = "maskNode"
@@ -125,9 +122,10 @@ class DongShotMaskUi(QtWidgets.QDialog):
     SHAPE_NAME = "DongShotMaskShape"
 
     TEXT_LABELS = [u"上左", u"上中", u"上右", u"下左", u"下中", u"下右"]
-    TEXT_ATTRIBUTES = ["topLeftText", "topCenterText", "topRightText", "bottomLeftText", "bottomCenterText", "bottomRightText"]
+    TEXT_ATTRIBUTES = ["topLeftText", "topCenterText", "topRightText", "bottomLeftText", "bottomCenterText",
+                       "bottomRightText"]
 
-    OPT_VAR_CAMERA = 'Dong_Camera'#自定义全局变量名
+    OPT_VAR_CAMERA = 'Dong_Camera'  #自定义全局变量名
     OPT_VAR_TEXT = "Dong_Text"
     OPT_VAR_FONT = "Dong_Font"
     OPT_VAR_FONT_COLOR = "Dong_FontColor"
@@ -136,7 +134,6 @@ class DongShotMaskUi(QtWidgets.QDialog):
     OPT_VAR_BORDER_COLOR = "Dong_BorderColor"
     OPT_VAR_BORDER_SCALE = "Dong_BorderScale"
     OPT_VAR_COUNTER_PADDING = "Dong_CounterPadding"
-
 
     def __init__(self, parent=maya_main_window()):
         super(DongShotMaskUi, self).__init__(parent)
@@ -296,7 +293,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
         counter_form_layout = QtWidgets.QFormLayout()
         counter_form_layout.setSpacing(4)
-        counter_form_layout.addRow(u"边距", counter_padding_layout)
+        counter_form_layout.addRow(u"帧数填充", counter_padding_layout)
         counter_form_layout.addRow(self.spacing_widget(), None)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -368,7 +365,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
         """
         if self.is_plugin_loaded():
             nodes = mc.ls(typ=DongShotMaskUi.NODE_TYPE)
-            if len(nodes)>0:
+            if len(nodes) > 0:
                 return nodes[0]
         return None
 
@@ -395,7 +392,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
                 mc.delete(mask)
 
     def update_mask(self):
-        mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_CAMERA, self.camera_le.text()])#生成一个自定义全局变量名，值为输入框内容
+        mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_CAMERA, self.camera_le.text()])  #生成一个自定义全局变量名，值为输入框内容
 
         mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_TEXT, self.text_line_edits[0].text()])
         for i in range(1, len(self.text_line_edits)):
@@ -425,7 +422,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
         mc.optionVar(fv=[DongShotMaskUi.OPT_VAR_BORDER_SCALE, self.border_scale_dsb.value()])
 
         mc.optionVar(iv=[DongShotMaskUi.OPT_VAR_COUNTER_PADDING, self.counter_padding_sb.value()])
-        
+
         self.refresh_mask()
 
     def refresh_mask(self):
@@ -453,7 +450,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
         mc.setAttr("{0}.borderScale".format(mask), self.get_border_scale())
 
         mc.setAttr("{0}.counterPadding".format(mask), self.get_counter_padding())
-        
+
     def refresh_ui(self):
         self.camera_le.setText(self.get_camera_name())
         text_list = self.get_text_list()
@@ -478,11 +475,62 @@ class DongShotMaskUi(QtWidgets.QDialog):
         self.counter_padding_sb.setValue(self.get_counter_padding())
 
     def get_camera_name(self):
-        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_CAMERA):#检查自定义全局变量名是否存在
-            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_CAMERA)#返回自定义变量的值
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_CAMERA):  #检查自定义全局变量名是否存在
+            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_CAMERA)  #返回自定义变量的值
 
         return 'all'
-        
+
+    def get_font(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_FONT):
+            font = mc.optionVar(q=DongShotMaskUi.OPT_VAR_FONT)
+            if font:
+                return font
+        return "Times New Roman"
+
+    def get_font_color(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_FONT_COLOR):
+            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_FONT_COLOR)
+        return [1.0, 1.0, 1.0, 1.0]
+
+    def get_font_scale(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_FONT_SCALE):
+            font_scale = mc.optionVar(q=DongShotMaskUi.OPT_VAR_FONT_SCALE)
+            if font_scale:
+                return font_scale
+        return 1.0
+
+    def get_border_visibility(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_BORDER_VISIBLE):
+            border_visibility = mc.optionVar(q=DongShotMaskUi.OPT_VAR_BORDER_VISIBLE)
+            try:
+                if len(border_visibility) == 2:
+                    return border_visibility
+            except:
+                pass
+        return [1, 1]
+
+    def get_border_color(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_BORDER_COLOR):
+            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_BORDER_COLOR)
+
+        return [0.0, 0.0, 0.0, 1.0]
+
+    def get_border_scale(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_BORDER_SCALE):
+            border_scale = mc.optionVar(q=DongShotMaskUi.OPT_VAR_BORDER_SCALE)
+            if border_scale:
+                return border_scale
+
+        return 1.0
+
+    def get_counter_padding(self):
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_COUNTER_PADDING):
+            counter_padding = mc.optionVar(q=DongShotMaskUi.OPT_VAR_COUNTER_PADDING)
+            if counter_padding >= 1 and counter_padding <= 6:
+                return counter_padding
+
+        return 4
+
     def set_camera_name(self, *args):
         cam = self.camera_le.text()
         self.camera_le.setText('all' if args[0] == 0 else self.camera_comb.itemText(args[0]))
@@ -521,7 +569,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 if __name__ == "__main__":
 
     try:
-        dong_mask_ui.close() # pylint: disable=E0601
+        dong_mask_ui.close()  # pylint: disable=E0601
         dong_mask_ui.deleteLater()
     except:
         pass
