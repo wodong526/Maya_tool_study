@@ -300,8 +300,10 @@ class CREATE_TRACK(QtWidgets.QDialog):
         :return:
         '''
         mc.delete(mc.listRelatives(self.mode_grp))
-        print(self.ctl)
-        mc.addAttr(self.ctl, ln='run', dv=0, k=True, at='float')
+        if not mc.attributeQuery('run', n=self.ctl, ex=True):
+            mc.addAttr(self.ctl, ln='run', dv=0, k=True, at='float')
+        else:
+            mc.setAttr('{}.run'.format(self.ctl), 0)
         self.aim_lis = []
         self.loc_lis = []
         mod_lis = []
@@ -328,10 +330,6 @@ class CREATE_TRACK(QtWidgets.QDialog):
             mc.connectAttr('{}.output'.format(mult_node), '{}.input2'.format(add_def_node))
             mc.connectAttr('{}.run'.format(self.ctl), '{}.input1'.format(mult_node))
 
-            posi_node = mc.createNode('pointOnSurfaceInfo', n='posi_{}_{}'.format(self.nam, i_str))
-            mc.setAttr('{}.parameterV'.format(posi_node), 0.5)
-            mc.connectAttr('{}.worldSpace[0]'.format(self.loft_suf_shp), '{}.inputSurface'.format(posi_node))
-
             mc.connectAttr('{}.output'.format(add_def_node), '{}.int_run'.format(loc))
 
             cond_node = mc.createNode('condition', n = 'cond_{}_{}'.format(self.nam, i_str))
@@ -351,8 +349,15 @@ class CREATE_TRACK(QtWidgets.QDialog):
             mc.connectAttr('{}.output'.format(add_def_node), '{}.input1D[0]'.format(plu_lvDai_node))
             mc.connectAttr('{}.outColorR'.format(cond_node), '{}.input1D[1]'.format(plu_lvDai_node))
 
-            motPath = self.create_motion_path(loc, self.crv_path_shp, 'motPath_{}_{}'.format(self.nam, i_str))
+            motPath = mc.createNode('motionPath', n='motPath_{}_{}'.format(self.nam, i_str))
+            mc.setAttr('{}.fractionMode'.format(motPath), 1)
+            mc.connectAttr('{}.worldSpace[0]'.format(self.crv_path_shp), '{}.geometryPath'.format(motPath))
             mc.connectAttr('{}.output1D'.format(plu_lvDai_node), '{}.uValue'.format(motPath))
+
+            plus_transform = mc.createNode('plusMinusAverage', n='plus_trans_{}_{}'.format(self.nam, i_str))
+            mc.connectAttr('{}.allCoordinates'.format(motPath), '{}.input3D[0]'.format(plus_transform))
+            mc.connectAttr('{}.transMinusRotatePivot'.format(loc), '{}.input3D[1]'.format(plus_transform))
+            mc.connectAttr('{}.output3D'.format(plus_transform), '{}.t'.format(loc))
 
             clo_nod = mc.createNode('closestPointOnSurface', n='los_{}_{}'.format(self.nam, i_str))
             mc.connectAttr('{}.worldSpace[0]'.format(self.loft_suf_shp), '{}.inputSurface'.format(clo_nod))
@@ -371,7 +376,7 @@ class CREATE_TRACK(QtWidgets.QDialog):
             mc.connectAttr('{}.normal'.format(sufInfo_node), '{}.worldUpVector'.format(aim_nod))
             for aix in ['X', 'Y', 'Z']:
                 mc.connectAttr('{}.constraintRotate{}'.format(aim_nod, aix), '{}.rotate{}'.format(loc, aix))
-            log.info('{}链接已生成。'.format(loc))
+        log.info('定位器位移链接已生成。')
 
         for inf in range(self.trackQuantity_sp.value()):
             inf_str = str(inf + 1).rjust(3, '0')
@@ -386,12 +391,13 @@ class CREATE_TRACK(QtWidgets.QDialog):
             mc.connectAttr('{}.translate'.format(self.loc_lis[inf]), '{}.input3D[1]'.format(plus_aix_nod))
 
             mc.connectAttr('{}.output3D'.format(plus_aix_nod), '{}.target[0].targetTranslate'.format(self.aim_lis[inf]))
-            log.info('{}方向约束已生成。'.format(self.loc_lis[inf]))
+        log.info('定位器方向约束已生成。')
 
         self.create_track_but.setEnabled(False)
         self.undoTrack_but.setEnabled(False)
         self.conn_but.setEnabled(False)
         self.create_lvDai(mod_lis)
+        mc.cycleCheck(e=False)#关闭循环检测,motionPath节点的位移输出接入了模型的输出属性，被判定为循环，其实无影响
 
     def create_lvDai(self, mod_lis):
         '''
@@ -553,6 +559,7 @@ class CREATE_TRACK(QtWidgets.QDialog):
         mc.setAttr('{}.fractionMode'.format(node), 1)
         mc.delete(mc.listConnections('{}.uValue'.format(node), d=False))
         return node
+
 
 try:
     track_window.close()
