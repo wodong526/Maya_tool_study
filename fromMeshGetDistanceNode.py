@@ -1,517 +1,145 @@
 # coding=gbk
-import maya.OpenMaya as om
+import maya.api.OpenMaya as om
 import maya.OpenMayaMPx as ompx
 import pdb
 
-nodeName = 'fromMeshGetDistance'  #½ÚµãÀàĞÍÃûÒ²ÊÇ½ÚµãÃû£¬ÎÄ¼şÃûÊÇ²å¼şµÄÃû×Ö
-nodeId = om.MTypeId(0x00004)  #¹ÜÀí Maya ¶ÔÏóÀàĞÍ±êÊ¶·û¡£
-
-
-def feedback(txt, info=False, warning=False, error=False, block=True):
-    """
-    ¸ù¾İÌá¹©µÄÀàĞÍÏÔÊ¾·´À¡ÏûÏ¢¡£
-    Parameters:
-    txt (str): ÒªÏÔÊ¾µÄÏûÏ¢¡£
-    info (bool): Èç¹ûÎª True£¬ÔòÏÔÊ¾ÎªÆÕÍ¨ÏûÏ¢¡£
-    warning (bool): Èç¹ûÎª True£¬ÔòÏÔÊ¾Îª¾¯¸æÏûÏ¢¡£
-    error (bool): Èç¹ûÎª True£¬ÔòÏÔÊ¾Îª´íÎóÏûÏ¢¡£
-    time (int): ÏÔÊ¾ÏûÏ¢µÄÊ±¼ä£¨ÒÔºÁÃëÎªµ¥Î»£©¡£
-    block (bool): Èç¹ûÎª True£¬Òı·¢´íÎóÊ±×è¶Ï³ÌĞò¡£
-
-    Returns:
-    None
-    """
-
-    if not info and not warning and not error:
-        info = True
-    if info:
-        om.MGlobal.displayInfo('{}'.format(txt))
-    elif warning:
-        om.MGlobal.displayWarning('{}'.format(txt))
-    elif error:
-        om.MGlobal.displayError(txt)
-
-
-class MeshRay(object):
-    @classmethod
-    def is_float_lis(cls, lis):
-        """
-        ¼ì²éÇ¶Ì×ÁĞ±íÖĞµÄËùÓĞÔªËØÊÇ·ñ¶¼ÊÇ¸¡µãÊı»òÕûÊı¡£
-        Args:
-        lis (list): Òª¼ì²éµÄÇ¶Ì×ÁĞ±í¡£
-        Returns:
-        bool: Èç¹ûËùÓĞÔªËØ¶¼ÊÇ¸¡µãÊı»òÕûÊı£¬ÔòÎª True£¬·ñÔòÎª False¡£
-        """
-        for inf in lis:
-            if isinstance(inf, list) or isinstance(inf, tuple):
-                cls.is_float_lis(inf)
-            elif not isinstance(inf, float) and not isinstance(inf, int):
-                feedback('²ÎÊı{}²»ÊôÓÚÁĞ±í»òÊı×Ö'.format(inf), error=True)
-                return False
-        return True
-
-    @classmethod
-    def get_mesh_mfn(cls, transform_name):
-        """
-        »ñÈ¡Ö¸¶¨±ä»»½ÚµãµÄshape½ÚµãµÄMFnMeshÀàĞÍ¶ÔÏó¡£
-        Args:
-            transform_name £¨str£©£ºÒª»ñÈ¡Æä MFnMesh ¶ÔÏóµÄ×ª»»½ÚµãµÄÃû³Æ¡£
-        Returns:
-            om.MFnMesh: Óë×ª»»½Úµã¹ØÁªµÄ MFnMesh ¶ÔÏó¡£
-        """
-        sel_list = om.MSelectionList()
-        sel_list.add(transform_name)
-        dag = om.MDagPath()
-        sel_list.getDagPath(0, dag)
-
-        dag.extendToShape()
-        fn_mesh = om.MFnMesh(dag)
-
-        return fn_mesh
-
-    def __init__(self, ray_vector, ray_source=None, space=om.MSpace.kWorld, max_param=99999, both_directions=False,
-                 mod=None):
-        """
-        OpenMaya.Api1.0µÄÉäÏßº¯ÊıÀà¡£
-        Args:
-        ray_vector (OpenMaya.MFloatVector): ÉäÏßÏòÁ¿¡£
-        ray_source (list, OpenMaya.MFloatPoint): ÉäÏßµÄÆğµã¡£Èç¹ûÎ´Ìá¹©£¬ÔòÊ¹ÓÃÉäÏßÏòÁ¿µÄµÚÒ»¸öµã¡£
-        space (OpenMaya.MSpace, optional): »÷ÖĞµã×ø±êµÄ¼ÆËã¿Õ¼ä¡£Ä¬ÈÏÖµÎªom.MSpace.kWorld¡£
-        max_param (float, optional): ÉäÏß·¢ÉäµÄ×î´ó²ÎÊıÖµ¡£Ä¬ÈÏÖµÎª 99999.
-        both_directions (bool, optional): Èç¹ûÎª True£¬ÔòÉäÏß´ÓÔ´µãµÄÕı¸ºÁ½¸ö·½ÏòÍ¶Éä¡£Ä¬ÈÏÖµÎª False¡£
-        mod (str, optional): Èç¹ûÖ¸¶¨ÔòÖ»¼ì²âÖ¸¶¨µÄÄ£ĞÍ£¬·ñÔò¼ì²â³¡¾°ÀïËùÓĞÄ£ĞÍ¡£Ä¬ÈÏÖµÎª None¡£
-        """
+class GetClosestIntersection(object):
+    def __init__(self):
+        self._mod = om.MFnMesh()
+        self._ray_source = om.MPoint()
         self._ray_vector = om.MFloatVector()
-        self._ray_source = om.MFloatPoint()
-        self._space = space
-        self._max_param = max_param
-        self._both_directions = both_directions
+        self._max_param = int()
 
-        self.set_ray_vector(ray_vector)
-        if ray_source:
-            self.set_ray_source(ray_source)
-        else:
-            self._ray_source = om.MFloatPoint(ray_vector[0][0], ray_vector[0][1], ray_vector[0][2])
-        self.set_mod(mod)
+    def set_fn_mesh(self, fn_mesh):
+        self._mod = fn_mesh
 
-        self._info_dir = {}
+    def set_ray_source(self, float_point):
+        self._ray_source = float_point
 
-    def set_ray_vector(self, val):
-        """
-        ¸ù¾İÊäÈëÖµÉèÖÃÉäÏßÏòÁ¿¡£
-        Args:
-            val: °üº¬Á½¸öÁĞ±íµÄÁĞ±í£¬Ã¿¸öÁĞ±í°üº¬Èı¸ö¸¡µãÊı£¬»òÕßÒ»¸ö OpenMaya.MFloatVector »òÒ»¸ö OpenMaya.MVector¡£
-        Returns:
-            None
-        """
-        if isinstance(val, om.MFloatVector):
-            val.normalize()
-            self._ray_vector = val
-        elif isinstance(val, om.MVector):
-            self._ray_vector = om.MFloatVector(val)
-        elif len(val) == 2 and len(val[0]) == 3 and len(val[1]) == 3 and MeshRay.is_float_lis(val):
-            self._ray_vector = om.MFloatVector(val[1][0] - val[0][0],
-                                               val[1][1] - val[0][1],
-                                               val[1][2] - val[0][2])
-        else:
-            feedback('²ÎÊı{}ÀàĞÍÓ¦Îª[[float, float, float], [float, float, float]]»òOpenMaya.MFloatVector»òOpenMaya.MVector\n'
-                     'Êµ¼ÊÎª{}'.format(val, [list(map(type, sublist)) for sublist in val]), error=True)
+    def set_ray_vector(self, float_vector):
+        self._ray_vector = float_vector
 
-    def get_ray_vector(self):
-        """
-        »ñÈ¡ÉäÏßÏòÁ¿ÊôĞÔ¡£
-        Returns:
-        Vector: ÉäÏßÏòÁ¿¡£
-        """
-        feedback(self._ray_vector)
-        return self._ray_vector
+    def set_max_param(self, param):
+        self._max_param = param
 
-    def set_ray_source(self, val):
-        """
-        ¸ù¾İÊäÈëÖµÉèÖÃÉäÏßÔ´µã¡£
-        Args:
-        val: ÒªÉèÖÃÎªÉäÏßÔ´µÄÖµ¡£Ó¦¸ÃÊÇÈı¸ö¸¡µãÊıµÄÁĞ±í£¬Ò»¸ö OpenMaya.MPoint£¬»ò OpenMaya.MFloatPoint¡£
-        """
-        if isinstance(val, om.MFloatPoint):
-            self._ray_source = val
-        elif isinstance(val, om.MPoint):
-            self._ray_source = om.MFloatPoint(val)
-        elif len(val) == 3 and MeshRay.is_float_lis(val):
-            self._ray_source = om.MFloatPoint(val[0], val[1], val[2])
-        else:
-            feedback('²ÎÊı{}ÀàĞÍÓ¦Îª[float, float, float]»òOpenMaya.MFloatPoint»òOpenMaya.MPoint\n'
-                     'Êµ¼ÊÎª{}'.format(val, [list(map(type, sublist)) for sublist in val]), error=True)
-
-    def get_ray_source(self):
-        """
-        ÓÃÓÚ·ÃÎÊÉäÏßÔ´µãµÄ Getter ·½·¨¡£
-        """
-        feedback(self._ray_source)
-        return self._ray_source
-
-    def set_space(self, val):
-        """
-        Ê¹ÓÃÌá¹©µÄÖµÉèÖÃspaceÊôĞÔ¡£
-        Parameters:
-        val (om.MSpace): Òª½« space ÊôĞÔÉèÖÃÎªµÄÖµ¡£
-        """
-        if isinstance(val, om.MSpace):
-            self._space = val
-        else:
-            feedback('²ÎÊı{}ÀàĞÍÓ¦ÎªOpenMaya.MSpace£¬Êµ¼ÊÎª{}'.format(val, type(val)), warning=True)
-
-    def get_space(self):
-        """
-        space ÊôĞÔµÄ Getter ·½·¨¡£
-        Returns:
-        int: »ñÈ¡µ½µÄspace ÊôĞÔµÄÖµ¡£
-        """
-        feedback(self._space)
-        return self._space
-
-    def set_max_param(self, val):
-        """
-        ÉèÖÃ×î´ó¼ì²â¾àÀë¡£
-        Args:
-        val (int): ÒªÉèÖÃ¾àÀëµÄÖµ¡£
-        """
-        if isinstance(val, int):
-            self._max_param = val
-        else:
-            feedback('²ÎÊı{}ÀàĞÍÓ¦Îªint£¬Êµ¼ÊÎª{}'.format(val, type(val)), warning=True)
-
-    def get_max_param(self):
-        """
-        ×î´ó¼ì²â¾àÀëµÄ Getter ·½·¨.
-        Returns:
-            int: ×î´ó¼ì²â¾àÀëµÄÖµ¡£
-        """
-        feedback(self._max_param)
-        return self._max_param
-
-    def set_both_directions(self, val):
-        """
-        ÉèÖÃÊÇ·ñ¼ì²âÏòÁ¿µÄÕı·´·½Ïò¡£
-        Args:
-            val (bool): Îªboth_directionsÉèÖÃµÄ²¼¶ûÖµ¡£
-        """
-        if isinstance(val, bool):
-            self._both_directions = val
-        else:
-            feedback('²ÎÊı{}bool£¬Êµ¼ÊÎª{}'.format(val, type(val)), warning=True)
-
-    def get_both_directions(self):
-        """
-        »ñÈ¡both_directionsµÄÖµ¡£
-        Returns:
-        bool: both_directionsµÄÖµ¡£
-        """
-        feedback(self._both_directions)
-        return self._both_directions
-
-    def set_mod(self, val):
-        """
-        ÉèÖÃÖ¸¶¨µÄ¼ì²âÄ£ĞÍ¡£
-        Èç¹û val ÊÇ om.MFnMesh£¬½«ĞŞÊÎ·ûÉèÖÃÎª val¡£
-        Èç¹û val ÊÇ±íÊ¾Ä£ĞÍµÄtransform½ÚµãµÄÃû³Æ£¬×Ô¶¯×ª»»Ä£ĞÍµÄshapeÎª MFnMesh¡£
-        Èç¹û val ²»Âú×ãÉÏÊöÌõ¼ş£¬Ôò½«ĞŞÊÎ·ûÉèÖÃÎª None£¬ÇÒ²»¶Ô¾ßÌåÄ£ĞÍ×ö¼ì²â£¬¶øÊÇ¼ì²âËùÓĞÄ£ĞÍ¡£
-        Args:
-        - val: ¿ÉÒÔÊÇ OpenMaya.MFnMesh »òÄ£ĞÍµÄtransform½ÚµãµÄÃû³Æ¡£
-        """
-        if isinstance(val, om.MFnMesh):
-            self._mod = val
-        else:
-            #feedback('{}²»´æÔÚ»ò²»ÎªÄ£ĞÍµÄtransform½Úµã»ò²»ÊÇÄ£ĞÍ¶ÔÏóµÄÃû³Æ'.format(val), error=True)
-            self._mod = None
-
-    def get_mod(self):
-        """
-        mod ÊôĞÔµÄ getter ·½·¨¡£
-
-        Returns:
-        int: mod ÊôĞÔµÄÖµ¡£
-        """
-        feedback(self._mod)
-        return self._mod
-
-    def __shooting_core(self, fn_mesh):
-        """
-        Ö´ĞĞÉäÏß¼ì²â²Ù×÷ÒÔ²éÕÒ¸ø¶¨Íø¸ñÉÏ×î½üµÄ½»µã¡£
-        Parameters:
-        fn_mesh (om.MFnMesh): Òª¶ÔÆäÖ´ĞĞ½»¼¯²Ù×÷µÄOpenMaya.MFnMesh¶ÔÏó¡£
-        Returns:
-        tuple: °üº¬ÃüÖĞµãµÄÊÀ½ç×ø±êµÄÔª×é£¬ÃüÖĞµãÓëÉäÏßÔ´µÄ¾àÀë£¬
-               ÃüÖĞµãËùÊôÃæµÄID£¬ÃüÖĞµãËùÊôÈı½ÇÃæµÄID¡£
-        """
-        hit_point = om.MFloatPoint()  # »÷ÖĞµãµÄÊÀ½ç×ø±ê
-
-        hitDistance = om.MScriptUtil(0.0)
-        hit_ray_param = hitDistance.asFloatPtr()  # »÷ÖĞµãÀë·¢ÉäµãµÄ¾àÀë
-
-        hitFace = om.MScriptUtil()
-        hit_face_ptr = hitFace.asIntPtr()  # »÷ÖĞµãµÄÃæµÄid
-        hitTriangle = om.MScriptUtil()
-        hit_triangle_ptr = hitTriangle.asIntPtr()  # »÷ÖĞµãµÄÃæµÄÈı½ÇĞÎid
-        fn_mesh.closestIntersection(self._ray_source, self._ray_vector, None, None, False, self._space, self._max_param,
-                                    self._both_directions, None, hit_point, hit_ray_param, hit_face_ptr,
-                                    hit_triangle_ptr, None, None)
-
-        if om.MScriptUtil().getInt(hit_face_ptr):
-            return hit_point, hit_ray_param, hit_face_ptr, hit_triangle_ptr
-        else:
-            return None
-
-    def get_hit_mod(self):
-        """
-        ´Ëº¯Êı¼ÆËã mod ¶ÔÏóµÄÃüÖĞĞÅÏ¢¡£
-        Èç¹ûÉèÖÃÁË mod ¶ÔÏó£¬Ëü»á¸ù¾İ mod µÄ¼¸ºÎĞÎ×´¼ÆËãÃüÖĞĞÅÏ¢¡£
-        Èç¹ûÎ´ÉèÖÃ mod ¶ÔÏó£¬Ëü»á±éÀú³¡¾°ÒÔ²éÕÒÍø¸ñ¶ÔÏó²¢¼ÆËãÃ¿¸ö¶ÔÏóµÄÃüÖĞĞÅÏ¢¡£
-        Returns:
-        None
-        """
-        self._info_dir.clear()
-        if self._mod:
-            ret = self.__shooting_core(self._mod)
-            if not ret:
-                return None
-            self._info_dir[om.MFnDependencyNode(self._mod.object()).name()] = {'pos': ret[0], 'distance': ret[1],
-                                                                               'face_id': ret[2],
-                                                                               'triangular_id': ret[3]}
-        # else:
-        #     it = om.MItDag(om.MItDag.kBreadthFirst, om.MFn.kMesh)
-        #     while not it.isDone():
-        #         current_obj = it.currentItem()
-        #         if current_obj.hasFn(om.MFn.kMesh):
-        #             dag_path = om.MDagPath()
-        #             it.getPath(dag_path)
-        #             #Èç¹û²»Ê¹ÓÃdag_path¹¹ÔìMFnMesh£¬µ÷ÓÃclosestIntersectionÊ±±¨´íMust have a DAG path to do world space transforms
-        #             fn_mesh = om.MFnMesh(dag_path)
-        #             ret = self.__shooting_core(fn_mesh)
-        #             if not ret:
-        #                 continue
-        #             self._info_dir[om.MFnDependencyNode(current_obj).name()] = {'pos': ret[0], 'distance': ret[1],
-        #                                                                         'face_id': ret[2],
-        #                                                                         'triangular_id': ret[3]}
-        #
-        #         it.next()
-
-    def decorator_hit(fun):
-        """
-        ÕâÊÇÒ»¸ö×°ÊÎÆ÷º¯Êı£¬Ëüµ÷ÓÃ¡°get_hit_mod¡±£¬È»ºóµ÷ÓÃÊäÈëº¯Êı¡°fun¡±¡£
-        Args:
-        - fun: Òª×°ÊÎµÄº¯Êı¡£
-        Returns:
-        - º¯Êı·µ»Ø¡£
-        """
-        def wrapper(self, *args, **kwargs):
-            self.get_hit_mod()
-            return fun(self, *args, **kwargs)
-        return wrapper
-
-    @decorator_hit
-    def get_all_info(self):
-        """
-        »ñÈ¡ËùÓĞÉäÏß¼ìË÷µ½µÄĞÅÏ¢¡£
-        Returns:
-        str: ËùÓĞÉäÏß¼ìË÷µ½µÄĞÅÏ¢µÄ×Öµä¡£
-        """
-        return self._info_dir
-
-    @decorator_hit
-    def get_pos(self):
-        """
-        »ñÈ¡Ã¿¸ö±»»÷ÖĞÄ£ĞÍµÄ×ø±êĞÅÏ¢¡£
-        Returns:
-        dict: °üº¬Ä£ĞÍÃû³ÆÎª¼ü£¬»÷ÖĞµã×ø±êÎ»ÖÃĞÅÏ¢£¨OpenMaya.MFloatPointÀàĞÍ£©×÷ÎªÖµµÄ×Öµä¡£
-        """
-        ret_dir = {}
-        for mod, val in self._info_dir.items():
-            return val['pos']
-
-        return ret_dir
-
-    @decorator_hit
     def get_distance(self):
         """
-       »ñÈ¡Ã¿¸ö±»»÷ÖĞÄ£ĞÍ¾àÀë·¢ÉäÔ´µÄ¾àÀë¡£
-       Returns:
-           dict: °üº¬Ä£ĞÍÃû³ÆÎª¼ü£¬»÷ÖĞµãµ½·¢ÉäÔ´µÄ¾àÀë£¨float *ÀàĞÍ£©×÷ÎªÖµµÄ×Öµä¡£
-       """
-        ret_dir = {}
-        for mod, val in self._info_dir.items():
-            return val['distance']
+        è¿”å›åˆ†åˆ«æ˜¯ï¼šå‘½ä¸­ç‚¹ï¼Œå‘å°„ç‚¹åˆ°å‘½ä¸­ç‚¹çš„è·ç¦»ï¼Œå‘½ä¸­çš„é¢idï¼Œå‘½ä¸­çš„ä¸‰è§’é¢id,å‘½ä¸­ç‚¹åœ¨ä¸‰è§’é¢ä¸Šçš„é‡å¿ƒåæ ‡
 
-        return None
-        #return ret_dir
-
-    @decorator_hit
-    def get_face_id(self):
+        å‘½ä¸­ç‚¹åœ¨ä¸‰è§’é¢ä¸Šçš„é‡å¿ƒåæ ‡æ˜¯ä¸€ä¸ªåŒ…å«ä¸‰ä¸ªæµ®ç‚¹æ•°çš„æ•°ç»„ï¼Œè¡¨ç¤ºäº¤ç‚¹åœ¨è¢«å‡»ä¸­çš„ä¸‰è§’å½¢ä¸Šçš„é‡å¿ƒåæ ‡ã€‚é‡å¿ƒåæ ‡æ˜¯æè¿°ä¸€ä¸ªç‚¹åœ¨ä¸€ä¸ªä¸‰è§’å½¢å†…éƒ¨ä½ç½®çš„ä¸€ç§å¸¸ç”¨æ–¹æ³•ã€‚
+        åœ¨ä¸€ä¸ªä¸‰è§’å½¢å†…ï¼Œä»»ä½•ä¸€ç‚¹éƒ½å¯ä»¥è¡¨ç¤ºä¸ºä¸‰ä¸ªé¡¶ç‚¹çš„åŠ æƒå’Œï¼Œè¿™äº›é¡¶ç‚¹ç§°ä¸ºé‡å¿ƒåæ ‡ç³»çš„åŸºç¡€ã€‚å¯¹äºä¸‰è§’å½¢ ABCï¼Œé‡å¿ƒåæ ‡ (u, v, w) è¡¨ç¤ºä¸ºï¼š
+        uï¼šç‚¹åœ¨ BC è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ AB çš„é•¿åº¦ä¹‹æ¯”ã€‚
+        vï¼šç‚¹åœ¨ AC è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ BC çš„é•¿åº¦ä¹‹æ¯”ã€‚
+        wï¼šç‚¹åœ¨ AB è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ AC çš„é•¿åº¦ä¹‹æ¯”ã€‚
+        é‡å¿ƒåæ ‡çš„æ€»å’Œå§‹ç»ˆä¸º 1ï¼Œå› æ­¤ (u, v, w) ä½äºå•ä½ä¸‰è§’å½¢å†…ã€‚è¿™æ„å‘³ç€åœ¨ä¸‰è§’å½¢å†…ï¼Œä»»ä½•ä¸€ç‚¹éƒ½å¯ä»¥ç”¨è¿™ä¸‰ä¸ªå€¼çš„çº¿æ€§ç»„åˆæ¥è¡¨ç¤ºï¼Œå³ P = uA + vB + wCï¼Œå…¶ä¸­ Aã€Bã€C æ˜¯ä¸‰è§’å½¢çš„é¡¶ç‚¹
+        :return:
         """
-        »ñÈ¡Ã¿¸ö±»»÷ÖĞÄ£ĞÍµÄÃæµÄid¡£
-        Returns:
-            dict: °üº¬Ä£ĞÍÃû³ÆÎª¼ü£¬±»»÷ÖĞÃæµÄid£¨int *ÀàĞÍ£©×÷ÎªÖµµÄ×Öµä¡£
-        """
-        ret_dir = {}
-        for mod, val in self._info_dir.items():
-            ret_dir[mod] = val['face_id']
+        _, distance, _, _, _, _ = self._mod.closestIntersection(self._ray_source, self._ray_vector,
+                                                                om.MSpace.kWorld, self._max_param, False)
+        if distance > 0:
+            return distance
+        else:
+            return 0
 
-        return ret_dir
+class WoDongNode(om.MPxNode):
+    rayMesh = om.MObject()#æ¨¡å‹å¯¹è±¡
+    sourceArray = om.MObject()#å‘é‡æºç‚¹
+    targetArray = om.MObject()#å‘é‡ç»ˆç‚¹
+    startArray = om.MObject()#å‘å°„ç‚¹
+    max_param = om.MObject()#æœ€å¤§è·ç¦»
+    outDistance = om.MObject()  #å‘å°„ç‚¹åˆ°æ¨¡å‹çš„è·ç¦»
 
-    @decorator_hit
-    def get_triangle_id(self):
-        """
-        »ñÈ¡Ã¿¸ö±»»÷ÖĞÄ£ĞÍµÄÃæµÄÈı½ÇÃæµÄid¡£
-        Returns:
-            dict: °üº¬Ä£ĞÍÃû³ÆÎª¼ü£¬±»»÷ÖĞÈı½ÇÃæµÄid£¨int *ÀàĞÍ£©×÷ÎªÖµµÄ×Öµä¡£
-        """
-        ret_dir = {}
-        for mod, val in self._info_dir.items():
-            ret_dir[mod] = val['triangular_id']
-
-        return ret_dir
-
-    def __repr__(self):
-        """
-        ÒÔ×Ö·û´®·µ»Øµ±Ç°ÊµÀıµÄ¸÷²ÎÊıµÄÖµºÍ±»¼ì²âµ½µÄĞÅÏ¢¡£
-        Returns:
-        str: ¸÷²ÎÊıµÄÖµºÍ±»¼ì²âµ½µÄĞÅÏ¢¡£
-        """
-        ret = 'vay_vector : {};vay_source : {};space : {};max_param : {};both_directions : {};mod : {}'.format(
-            self._ray_vector, self._ray_source, self._space, self._max_param, self._both_directions, self._mod)
-        return ret + '\n' + str(self._info_dir)
-
-
-
-class WoDongNode(ompx.MPxNode):
-    rayMesh = om.MObject()#Ä£ĞÍ¶ÔÏó
-    sourceArray = om.MObject()#ÏòÁ¿Ô´µã
-    targetArray = om.MObject()#ÏòÁ¿ÖÕµã
-    startArray = om.MObject()#·¢Éäµã
-    outDistance = om.MObject()  #·¢Éäµãµ½Ä£ĞÍµÄ¾àÀë
-
-
+    nodeName = 'fromMeshGetDistance'  # èŠ‚ç‚¹ç±»å‹åä¹Ÿæ˜¯èŠ‚ç‚¹åï¼Œæ–‡ä»¶åæ˜¯æ’ä»¶çš„åå­—
+    nodeId = om.MTypeId(0x83002)  # ç®¡ç† Maya å¯¹è±¡ç±»å‹æ ‡è¯†ç¬¦ã€‚
 
     @classmethod
     def update_attr_properties(cls, attr):
-        attr.setWritable(True)#ÊôĞÔ¿ÉĞ´
-        attr.setStorable(True)#¿É´¢´æ
-        attr.setReadable(True)#¿É¶Á
-        attr.setConnectable(True)
-        if attr.type() == om.MFn.kNumericAttribute:  #Èç¹ûÊÇÊı×ÖÀàĞÍÊôĞÔ
-            attr.setKeyable(True)#¿ÉkÖ¡
+        attr.storable = True#å¯å‚¨å­˜
+        attr.readable = True#å¯è¯»
+        attr.connectable = True
+        if attr.type() == om.MFn.kNumericAttribute:  #å¦‚æœæ˜¯æ•°å­—ç±»å‹å±æ€§
+            attr.keyable = True#å¯kå¸§
 
     @classmethod
     def creatorNode(cls):
-        return ompx.asMPxPtr(cls())
+        return WoDongNode()
 
     @classmethod
     def nodeInitialize(cls):
         """
-        ³õÊ¼»¯½Úµã
+        åˆå§‹åŒ–èŠ‚ç‚¹
         :return:
         """
         typeAttr = om.MFnTypedAttribute()
         numAttr = om.MFnNumericAttribute()
+        mAttr = om.MFnMatrixAttribute()
         compAttr = om.MFnCompoundAttribute()
 
         WoDongNode.rayMesh = typeAttr.create("inputMesh", "inMesh", om.MFnData.kMesh)
         cls.update_attr_properties(typeAttr)
-        WoDongNode.addAttribute(WoDongNode.rayMesh)
+        om.MPxNode.addAttribute(WoDongNode.rayMesh)
 
-        WoDongNode.sourceArray_x = numAttr.create("sourceArray_x", "sorArry_x", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.sourceArray_x)
+        WoDongNode.sourceArray = mAttr.create("sourceMatrix", "sorMat", om.MFnMatrixAttribute.kDouble)
+        om.MPxNode.addAttribute(WoDongNode.sourceArray)#å‘é‡èµ·å§‹ç‚¹
 
-        WoDongNode.sourceArray_y = numAttr.create("sourceArray_y", "sorArry_y", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.sourceArray_y)
+        WoDongNode.targetArray = mAttr.create("targetMatrix", "tagMat", om.MFnMatrixAttribute.kDouble)
+        om.MPxNode.addAttribute(WoDongNode.targetArray)#å‘é‡ç»ˆç‚¹
 
-        WoDongNode.sourceArray_z = numAttr.create("sourceArray_z", "sorArry_z", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.sourceArray_z)
-
-        WoDongNode.sourceArray = numAttr.create("sourceArray", "sorArry", WoDongNode.sourceArray_x,
-                                                WoDongNode.sourceArray_y, WoDongNode.sourceArray_z)
-        WoDongNode.addAttribute(WoDongNode.sourceArray)#ÏòÁ¿ÆğÊ¼µã
-
-        WoDongNode.targetArray_x = numAttr.create("targetArray_x", "tagArry_x", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.targetArray_x)
-
-        WoDongNode.targetArray_y = numAttr.create("targetArray_y", "tagArry_y", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.targetArray_y)
-
-        WoDongNode.targetArray_z = numAttr.create("targetArray_z", "tagArry_z", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.targetArray_z)
-
-        WoDongNode.targetArray = numAttr.create("targetArray", "tagArry", WoDongNode.targetArray_x,
-                                                WoDongNode.targetArray_y, WoDongNode.targetArray_z)
-        WoDongNode.addAttribute(WoDongNode.targetArray)#ÏòÁ¿ÖÕµã
-
-        WoDongNode.array = compAttr.create("array", "arry")
+        WoDongNode.array = compAttr.create("vector", "vtr")
         cls.update_attr_properties(compAttr)
         compAttr.addChild(WoDongNode.sourceArray)
         compAttr.addChild(WoDongNode.targetArray)
-        WoDongNode.addAttribute(WoDongNode.array)#ÏòÁ¿ÊôĞÔ
+        om.MPxNode.addAttribute(WoDongNode.array)#å‘é‡å±æ€§
 
-        WoDongNode.startArray_x = numAttr.create("startArray_x", "starArry_x", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.startArray_x)
+        WoDongNode.startArray = mAttr.create("startMatrix", "starMat", om.MFnMatrixAttribute.kDouble)
+        om.MPxNode.addAttribute(WoDongNode.startArray)#å‘å°„ç‚¹
 
-        WoDongNode.startArray_y = numAttr.create("startArray_y", "starArry_y", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.startArray_y)
-
-        WoDongNode.startArray_z = numAttr.create("startArray_z", "starArry_z", om.MFnNumericData.kFloat, 0.0)
-        WoDongNode.addAttribute(WoDongNode.startArray_z)
-
-        WoDongNode.startArray = numAttr.create("startArray", "starArry", WoDongNode.startArray_x,
-                                                WoDongNode.startArray_y, WoDongNode.startArray_z)
-
+        WoDongNode.max_param = numAttr.create('maxParam', 'mp', om.MFnNumericData.kInt, 9999)
         cls.update_attr_properties(numAttr)
-        WoDongNode.addAttribute(WoDongNode.startArray)#·¢Éäµã
+        om.MPxNode.addAttribute(WoDongNode.max_param)
 
         WoDongNode.outDistance = numAttr.create("Distance", "dis", om.MFnNumericData.kFloat, 0.0)
-        numAttr.setReadable(True)
-        numAttr.setWritable(False)
-        numAttr.setStorable(True)
-        numAttr.setKeyable(False)
-        WoDongNode.addAttribute(WoDongNode.outDistance)#³¤¶ÈÊä³ö
+        numAttr.readable = True
+        numAttr.writable = False
+        numAttr.storable = True
+        numAttr.keyable = False
+        om.MPxNode.addAttribute(WoDongNode.outDistance)#é•¿åº¦è¾“å‡º
 
-        WoDongNode.attributeAffects(WoDongNode.rayMesh, WoDongNode.outDistance)
-        WoDongNode.attributeAffects(WoDongNode.array, WoDongNode.outDistance)
-        WoDongNode.attributeAffects(WoDongNode.startArray, WoDongNode.outDistance)
+        om.MPxNode.attributeAffects(WoDongNode.rayMesh, WoDongNode.outDistance)
+        om.MPxNode.attributeAffects(WoDongNode.array, WoDongNode.outDistance)
+        om.MPxNode.attributeAffects(WoDongNode.startArray, WoDongNode.outDistance)
+        om.MPxNode.attributeAffects(WoDongNode.max_param, WoDongNode.outDistance)
 
     def __init__(self):
         super(WoDongNode, self).__init__()
-        self.ray = MeshRay([[0, 0, 0], [0, 0, 0]], [0, 0, 0], both_directions=True)
+        self.ray = GetClosestIntersection()
 
     def compute(self, plug, dataBlok):
         if plug == WoDongNode.outDistance:
-            #mfn_mesh = dataBlok.inputValue(WoDongNode.rayMesh).asMesh()
             mfn_mesh = self.get_upstream_nod()
-            sor_array = dataBlok.inputValue(WoDongNode.sourceArray).asFloat3()
-            tag_array = dataBlok.inputValue(WoDongNode.targetArray).asFloat3()
-            star_array = dataBlok.inputValue(WoDongNode.startArray).asFloat3()
+            sor_array = om.MTransformationMatrix(dataBlok.inputValue(WoDongNode.sourceArray).asMatrix()).translation(om.MSpace.kWorld)
+            tag_array = om.MTransformationMatrix(dataBlok.inputValue(WoDongNode.targetArray).asMatrix()).translation(om.MSpace.kWorld)
+            star_array = om.MTransformationMatrix(dataBlok.inputValue(WoDongNode.startArray).asMatrix()).translation(om.MSpace.kWorld)
+            max_param = dataBlok.inputValue(WoDongNode.max_param).asInt()
             outputAttr = dataBlok.outputValue(WoDongNode.outDistance)
 
-            lis_array = list(map(lambda x, y:y-x, sor_array, tag_array))
-            lis_start = list(map(lambda x:round(x, 5), star_array))
             if mfn_mesh:
-                vector_fVector = om.MFloatVector(lis_array[0], lis_array[1], lis_array[2])
-                start_fPoint = om.MFloatPoint(lis_start[0], lis_start[1], lis_start[2])
+                sor_point = om.MFloatPoint(star_array)
+                vector_fVector = om.MFloatVector(tag_array - sor_array).normal()
+
+                self.ray.set_ray_source(sor_point)
                 self.ray.set_ray_vector(vector_fVector)
-                self.ray.set_ray_source(lis_start)
-                self.ray.set_mod(mfn_mesh)
-                if self.ray.get_distance():
-                    distance = om.MScriptUtil().getFloat(self.ray.get_distance())
-                    # pos = self.ray.get_pos()
-                    # print(pos.x, pos.y, pos.z)
-                    # print(distance)
-                    outputAttr.setFloat(distance)
-                else:
-                    outputAttr.setFloat(0.0)
+                self.ray.set_max_param(max_param)
+                self.ray.set_fn_mesh(mfn_mesh)
+                distance = self.ray.get_distance()
+                outputAttr.setFloat(distance) if distance else outputAttr.setFloat(0.0)
             else:
                 outputAttr.setFloat(0.0)
-        return om.kUnknownParameter
+        return
 
     def get_upstream_nod(self):
         """
-        »ñÈ¡ÉÏÓÎmesh½Úµã
+        è·å–ä¸Šæ¸¸meshèŠ‚ç‚¹
         :return:
         """
         dpd_nod = om.MFnDependencyNode(self.thisMObject())
@@ -521,13 +149,12 @@ class WoDongNode(ompx.MPxNode):
                                     om.MItDependencyGraph.kDepthFirst, om.MItDependencyGraph.kNodeLevel)
         mesh_node = None
         while not mit.isDone():
-            mesh_node = mit.thisNode()
+            mesh_node = mit.currentNode()
             break
 
         if isinstance(mesh_node, om.MObject):
             fn_dag_node = om.MFnDagNode(mesh_node)
-            dag_node = om.MDagPath()
-            fn_dag_node.getPath(dag_node)
+            dag_node = fn_dag_node.getPath()
             return om.MFnMesh(dag_node)
         return None
 
@@ -539,34 +166,36 @@ class WoDongNode(ompx.MPxNode):
 
     def undoIt(self):
         """
-        µ±²Ù×÷¿ÉÒÔ±»³·ÏúÊ±£¬Ê¹ÓÃ³·Ïú»áµ÷ÓÃ¸Ãº¯Êı
+        å½“æ“ä½œå¯ä»¥è¢«æ’¤é”€æ—¶ï¼Œä½¿ç”¨æ’¤é”€ä¼šè°ƒç”¨è¯¥å‡½æ•°
         :return:
         """
         self.fn_mesh.setPoints(self.initial, om.MSpace.kWorld)
 
     def isUndoable(self):
         """
-        Ä¬ÈÏ·µ»Øfalse£¬µ±·µ»ØÎªfalse±íÊ¾doItÖĞµÄ²Ù×÷²»¿É³·Ïú£¬ÔËĞĞºóÁ¢¼´Ïú»Ù£»·µ»ØtrueÔò»á±£Áôµ½³·Ïú¹ÜÀíÆ÷£¬ÓÃÓÚÔÚ³·ÏúÊ±µ÷ÓÃundoIt
-        ÔËĞĞdoItºó»áÁ¢¼´µ÷ÓÃ¸Ãº¯ÊıÀ´ÅĞ¶Ï¸Ã²Ù×÷ÊÇ·ñÎª¿É³·Ïú
+        é»˜è®¤è¿”å›falseï¼Œå½“è¿”å›ä¸ºfalseè¡¨ç¤ºdoItä¸­çš„æ“ä½œä¸å¯æ’¤é”€ï¼Œè¿è¡Œåç«‹å³é”€æ¯ï¼›è¿”å›trueåˆ™ä¼šä¿ç•™åˆ°æ’¤é”€ç®¡ç†å™¨ï¼Œç”¨äºåœ¨æ’¤é”€æ—¶è°ƒç”¨undoIt
+        è¿è¡ŒdoItåä¼šç«‹å³è°ƒç”¨è¯¥å‡½æ•°æ¥åˆ¤æ–­è¯¥æ“ä½œæ˜¯å¦ä¸ºå¯æ’¤é”€
         :return: True
         """
         return True
 
+def maya_useNewAPI():
+    pass
 
-def initializePlugin(mobject):
-    plugin = ompx.MFnPlugin(mobject, 'woDong', '0.1', 'Any')  #mobject,²å½ø¹©Ó¦ÉÌ£¬°æ±¾£¬²å¼şÊÊÓÃµÄapi°æ±¾£¨anyÎªËùÓĞ£©
+def initializePlugin(obj):
+    plugin = om.MFnPlugin(obj, 'woDong', '0.1', 'Any')  #mobject,æ’è¿›ä¾›åº”å•†ï¼Œç‰ˆæœ¬ï¼Œæ’ä»¶é€‚ç”¨çš„apiç‰ˆæœ¬ï¼ˆanyä¸ºæ‰€æœ‰ï¼‰
     try:
-        plugin.registerNode(nodeName, nodeId, WoDongNode.creatorNode, WoDongNode.nodeInitialize,
-                            ompx.MPxNode.kDependNode)  #½ÚµãÀàĞÍÃû£¬½Úµãid£¬´´½¨º¯Êı£¬³õÊ¼»¯º¯Êı
-        om.MGlobal.displayInfo('¼ÓÔØ³É¹¦£¡')
+        plugin.registerNode(WoDongNode.nodeName, WoDongNode.nodeId, WoDongNode.creatorNode, WoDongNode.nodeInitialize,
+                            om.MPxNode.kDependNode)  #èŠ‚ç‚¹ç±»å‹åï¼ŒèŠ‚ç‚¹idï¼Œåˆ›å»ºå‡½æ•°ï¼Œåˆå§‹åŒ–å‡½æ•°
+        om.MGlobal.displayInfo('åŠ è½½æˆåŠŸï¼')
     except Exception as e:
-        om.MGlobal.displayError('¼ÓÔØ·¢Éú´íÎó£º{}¡£'.format(e))
+        om.MGlobal.displayError('åŠ è½½å‘ç”Ÿé”™è¯¯ï¼š{}ã€‚'.format(e))
 
 
 def uninitializePlugin(mobject):
-    plugin = ompx.MFnPlugin(mobject)
+    plugin = om.MFnPlugin(mobject)
     try:
-        plugin.deregisterNode(nodeId)
-        om.MGlobal.displayInfo('È¡Ïû¼ÓÔØ³É¹¦£¡')
+        plugin.deregisterNode(WoDongNode.nodeId)
+        om.MGlobal.displayInfo('å–æ¶ˆåŠ è½½æˆåŠŸï¼')
     except Exception as e:
-        om.MGlobal.displayError('È¡Ïû¼ÓÔØ·¢Éú´íÎó£º{}¡£'.format(e))
+        om.MGlobal.displayError('å–æ¶ˆåŠ è½½å‘ç”Ÿé”™è¯¯ï¼š{}ã€‚'.format(e))
