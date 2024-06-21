@@ -24,14 +24,14 @@ class GetClosestIntersection(object):
 
     def get_distance(self):
         """
-        è¿”å›åˆ†åˆ«æ˜¯ï¼šå‘½ä¸­ç‚¹ï¼Œå‘å°„ç‚¹åˆ°å‘½ä¸­ç‚¹çš„è·ç¦»ï¼Œå‘½ä¸­çš„é¢idï¼Œå‘½ä¸­çš„ä¸‰è§’é¢id,å‘½ä¸­ç‚¹åœ¨ä¸‰è§’é¢ä¸Šçš„é‡å¿ƒåæ ‡
+        ·µ»Ø·Ö±ğÊÇ£ºÃüÖĞµã£¬·¢Éäµãµ½ÃüÖĞµãµÄ¾àÀë£¬ÃüÖĞµÄÃæid£¬ÃüÖĞµÄÈı½ÇÃæid,ÃüÖĞµãÔÚÈı½ÇÃæÉÏµÄÖØĞÄ×ø±ê
 
-        å‘½ä¸­ç‚¹åœ¨ä¸‰è§’é¢ä¸Šçš„é‡å¿ƒåæ ‡æ˜¯ä¸€ä¸ªåŒ…å«ä¸‰ä¸ªæµ®ç‚¹æ•°çš„æ•°ç»„ï¼Œè¡¨ç¤ºäº¤ç‚¹åœ¨è¢«å‡»ä¸­çš„ä¸‰è§’å½¢ä¸Šçš„é‡å¿ƒåæ ‡ã€‚é‡å¿ƒåæ ‡æ˜¯æè¿°ä¸€ä¸ªç‚¹åœ¨ä¸€ä¸ªä¸‰è§’å½¢å†…éƒ¨ä½ç½®çš„ä¸€ç§å¸¸ç”¨æ–¹æ³•ã€‚
-        åœ¨ä¸€ä¸ªä¸‰è§’å½¢å†…ï¼Œä»»ä½•ä¸€ç‚¹éƒ½å¯ä»¥è¡¨ç¤ºä¸ºä¸‰ä¸ªé¡¶ç‚¹çš„åŠ æƒå’Œï¼Œè¿™äº›é¡¶ç‚¹ç§°ä¸ºé‡å¿ƒåæ ‡ç³»çš„åŸºç¡€ã€‚å¯¹äºä¸‰è§’å½¢ ABCï¼Œé‡å¿ƒåæ ‡ (u, v, w) è¡¨ç¤ºä¸ºï¼š
-        uï¼šç‚¹åœ¨ BC è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ AB çš„é•¿åº¦ä¹‹æ¯”ã€‚
-        vï¼šç‚¹åœ¨ AC è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ BC çš„é•¿åº¦ä¹‹æ¯”ã€‚
-        wï¼šç‚¹åœ¨ AB è¾¹ä¸Šçš„è·ç¦»ä¸è¾¹ AC çš„é•¿åº¦ä¹‹æ¯”ã€‚
-        é‡å¿ƒåæ ‡çš„æ€»å’Œå§‹ç»ˆä¸º 1ï¼Œå› æ­¤ (u, v, w) ä½äºå•ä½ä¸‰è§’å½¢å†…ã€‚è¿™æ„å‘³ç€åœ¨ä¸‰è§’å½¢å†…ï¼Œä»»ä½•ä¸€ç‚¹éƒ½å¯ä»¥ç”¨è¿™ä¸‰ä¸ªå€¼çš„çº¿æ€§ç»„åˆæ¥è¡¨ç¤ºï¼Œå³ P = uA + vB + wCï¼Œå…¶ä¸­ Aã€Bã€C æ˜¯ä¸‰è§’å½¢çš„é¡¶ç‚¹
+        ÃüÖĞµãÔÚÈı½ÇÃæÉÏµÄÖØĞÄ×ø±êÊÇÒ»¸ö°üº¬Èı¸ö¸¡µãÊıµÄÊı×é£¬±íÊ¾½»µãÔÚ±»»÷ÖĞµÄÈı½ÇĞÎÉÏµÄÖØĞÄ×ø±ê¡£ÖØĞÄ×ø±êÊÇÃèÊöÒ»¸öµãÔÚÒ»¸öÈı½ÇĞÎÄÚ²¿Î»ÖÃµÄÒ»ÖÖ³£ÓÃ·½·¨¡£
+        ÔÚÒ»¸öÈı½ÇĞÎÄÚ£¬ÈÎºÎÒ»µã¶¼¿ÉÒÔ±íÊ¾ÎªÈı¸ö¶¥µãµÄ¼ÓÈ¨ºÍ£¬ÕâĞ©¶¥µã³ÆÎªÖØĞÄ×ø±êÏµµÄ»ù´¡¡£¶ÔÓÚÈı½ÇĞÎ ABC£¬ÖØĞÄ×ø±ê (u, v, w) ±íÊ¾Îª£º
+        u£ºµãÔÚ BC ±ßÉÏµÄ¾àÀëÓë±ß AB µÄ³¤¶ÈÖ®±È¡£
+        v£ºµãÔÚ AC ±ßÉÏµÄ¾àÀëÓë±ß BC µÄ³¤¶ÈÖ®±È¡£
+        w£ºµãÔÚ AB ±ßÉÏµÄ¾àÀëÓë±ß AC µÄ³¤¶ÈÖ®±È¡£
+        ÖØĞÄ×ø±êµÄ×ÜºÍÊ¼ÖÕÎª 1£¬Òò´Ë (u, v, w) Î»ÓÚµ¥Î»Èı½ÇĞÎÄÚ¡£ÕâÒâÎ¶×ÅÔÚÈı½ÇĞÎÄÚ£¬ÈÎºÎÒ»µã¶¼¿ÉÒÔÓÃÕâÈı¸öÖµµÄÏßĞÔ×éºÏÀ´±íÊ¾£¬¼´ P = uA + vB + wC£¬ÆäÖĞ A¡¢B¡¢C ÊÇÈı½ÇĞÎµÄ¶¥µã
         :return:
         """
         _, distance, _, _, _, _ = self._mod.closestIntersection(self._ray_source, self._ray_vector,
@@ -42,23 +42,23 @@ class GetClosestIntersection(object):
             return 0
 
 class WoDongNode(om.MPxNode):
-    rayMesh = om.MObject()#æ¨¡å‹å¯¹è±¡
-    sourceArray = om.MObject()#å‘é‡æºç‚¹
-    targetArray = om.MObject()#å‘é‡ç»ˆç‚¹
-    startArray = om.MObject()#å‘å°„ç‚¹
-    max_param = om.MObject()#æœ€å¤§è·ç¦»
-    outDistance = om.MObject()  #å‘å°„ç‚¹åˆ°æ¨¡å‹çš„è·ç¦»
+    rayMesh = om.MObject()#Ä£ĞÍ¶ÔÏó
+    sourceArray = om.MObject()#ÏòÁ¿Ô´µã
+    targetArray = om.MObject()#ÏòÁ¿ÖÕµã
+    startArray = om.MObject()#·¢Éäµã
+    max_param = om.MObject()#×î´ó¾àÀë
+    outDistance = om.MObject()  #·¢Éäµãµ½Ä£ĞÍµÄ¾àÀë
 
-    nodeName = 'fromMeshGetDistance'  # èŠ‚ç‚¹ç±»å‹åä¹Ÿæ˜¯èŠ‚ç‚¹åï¼Œæ–‡ä»¶åæ˜¯æ’ä»¶çš„åå­—
-    nodeId = om.MTypeId(0x83002)  # ç®¡ç† Maya å¯¹è±¡ç±»å‹æ ‡è¯†ç¬¦ã€‚
+    nodeName = 'fromMeshGetDistance'  # ½ÚµãÀàĞÍÃûÒ²ÊÇ½ÚµãÃû£¬ÎÄ¼şÃûÊÇ²å¼şµÄÃû×Ö
+    nodeId = om.MTypeId(0x83002)  # ¹ÜÀí Maya ¶ÔÏóÀàĞÍ±êÊ¶·û¡£
 
     @classmethod
     def update_attr_properties(cls, attr):
-        attr.storable = True#å¯å‚¨å­˜
-        attr.readable = True#å¯è¯»
+        attr.storable = True#¿É´¢´æ
+        attr.readable = True#¿É¶Á
         attr.connectable = True
-        if attr.type() == om.MFn.kNumericAttribute:  #å¦‚æœæ˜¯æ•°å­—ç±»å‹å±æ€§
-            attr.keyable = True#å¯kå¸§
+        if attr.type() == om.MFn.kNumericAttribute:  #Èç¹ûÊÇÊı×ÖÀàĞÍÊôĞÔ
+            attr.keyable = True#¿ÉkÖ¡
 
     @classmethod
     def creatorNode(cls):
@@ -67,7 +67,7 @@ class WoDongNode(om.MPxNode):
     @classmethod
     def nodeInitialize(cls):
         """
-        åˆå§‹åŒ–èŠ‚ç‚¹
+        ³õÊ¼»¯½Úµã
         :return:
         """
         typeAttr = om.MFnTypedAttribute()
@@ -80,19 +80,19 @@ class WoDongNode(om.MPxNode):
         om.MPxNode.addAttribute(WoDongNode.rayMesh)
 
         WoDongNode.sourceArray = mAttr.create("sourceMatrix", "sorMat", om.MFnMatrixAttribute.kDouble)
-        om.MPxNode.addAttribute(WoDongNode.sourceArray)#å‘é‡èµ·å§‹ç‚¹
+        om.MPxNode.addAttribute(WoDongNode.sourceArray)#ÏòÁ¿ÆğÊ¼µã
 
         WoDongNode.targetArray = mAttr.create("targetMatrix", "tagMat", om.MFnMatrixAttribute.kDouble)
-        om.MPxNode.addAttribute(WoDongNode.targetArray)#å‘é‡ç»ˆç‚¹
+        om.MPxNode.addAttribute(WoDongNode.targetArray)#ÏòÁ¿ÖÕµã
 
         WoDongNode.array = compAttr.create("vector", "vtr")
         cls.update_attr_properties(compAttr)
         compAttr.addChild(WoDongNode.sourceArray)
         compAttr.addChild(WoDongNode.targetArray)
-        om.MPxNode.addAttribute(WoDongNode.array)#å‘é‡å±æ€§
+        om.MPxNode.addAttribute(WoDongNode.array)#ÏòÁ¿ÊôĞÔ
 
         WoDongNode.startArray = mAttr.create("startMatrix", "starMat", om.MFnMatrixAttribute.kDouble)
-        om.MPxNode.addAttribute(WoDongNode.startArray)#å‘å°„ç‚¹
+        om.MPxNode.addAttribute(WoDongNode.startArray)#·¢Éäµã
 
         WoDongNode.max_param = numAttr.create('maxParam', 'mp', om.MFnNumericData.kInt, 9999)
         cls.update_attr_properties(numAttr)
@@ -103,7 +103,7 @@ class WoDongNode(om.MPxNode):
         numAttr.writable = False
         numAttr.storable = True
         numAttr.keyable = False
-        om.MPxNode.addAttribute(WoDongNode.outDistance)#é•¿åº¦è¾“å‡º
+        om.MPxNode.addAttribute(WoDongNode.outDistance)#³¤¶ÈÊä³ö
 
         om.MPxNode.attributeAffects(WoDongNode.rayMesh, WoDongNode.outDistance)
         om.MPxNode.attributeAffects(WoDongNode.array, WoDongNode.outDistance)
@@ -139,7 +139,7 @@ class WoDongNode(om.MPxNode):
 
     def get_upstream_nod(self):
         """
-        è·å–ä¸Šæ¸¸meshèŠ‚ç‚¹
+        »ñÈ¡ÉÏÓÎmesh½Úµã
         :return:
         """
         dpd_nod = om.MFnDependencyNode(self.thisMObject())
@@ -166,15 +166,15 @@ class WoDongNode(om.MPxNode):
 
     def undoIt(self):
         """
-        å½“æ“ä½œå¯ä»¥è¢«æ’¤é”€æ—¶ï¼Œä½¿ç”¨æ’¤é”€ä¼šè°ƒç”¨è¯¥å‡½æ•°
+        µ±²Ù×÷¿ÉÒÔ±»³·ÏúÊ±£¬Ê¹ÓÃ³·Ïú»áµ÷ÓÃ¸Ãº¯Êı
         :return:
         """
         self.fn_mesh.setPoints(self.initial, om.MSpace.kWorld)
 
     def isUndoable(self):
         """
-        é»˜è®¤è¿”å›falseï¼Œå½“è¿”å›ä¸ºfalseè¡¨ç¤ºdoItä¸­çš„æ“ä½œä¸å¯æ’¤é”€ï¼Œè¿è¡Œåç«‹å³é”€æ¯ï¼›è¿”å›trueåˆ™ä¼šä¿ç•™åˆ°æ’¤é”€ç®¡ç†å™¨ï¼Œç”¨äºåœ¨æ’¤é”€æ—¶è°ƒç”¨undoIt
-        è¿è¡ŒdoItåä¼šç«‹å³è°ƒç”¨è¯¥å‡½æ•°æ¥åˆ¤æ–­è¯¥æ“ä½œæ˜¯å¦ä¸ºå¯æ’¤é”€
+        Ä¬ÈÏ·µ»Øfalse£¬µ±·µ»ØÎªfalse±íÊ¾doItÖĞµÄ²Ù×÷²»¿É³·Ïú£¬ÔËĞĞºóÁ¢¼´Ïú»Ù£»·µ»ØtrueÔò»á±£Áôµ½³·Ïú¹ÜÀíÆ÷£¬ÓÃÓÚÔÚ³·ÏúÊ±µ÷ÓÃundoIt
+        ÔËĞĞdoItºó»áÁ¢¼´µ÷ÓÃ¸Ãº¯ÊıÀ´ÅĞ¶Ï¸Ã²Ù×÷ÊÇ·ñÎª¿É³·Ïú
         :return: True
         """
         return True
@@ -183,19 +183,19 @@ def maya_useNewAPI():
     pass
 
 def initializePlugin(obj):
-    plugin = om.MFnPlugin(obj, 'woDong', '0.1', 'Any')  #mobject,æ’è¿›ä¾›åº”å•†ï¼Œç‰ˆæœ¬ï¼Œæ’ä»¶é€‚ç”¨çš„apiç‰ˆæœ¬ï¼ˆanyä¸ºæ‰€æœ‰ï¼‰
+    plugin = om.MFnPlugin(obj, 'woDong', '0.1', 'Any')  #mobject,²å½ø¹©Ó¦ÉÌ£¬°æ±¾£¬²å¼şÊÊÓÃµÄapi°æ±¾£¨anyÎªËùÓĞ£©
     try:
         plugin.registerNode(WoDongNode.nodeName, WoDongNode.nodeId, WoDongNode.creatorNode, WoDongNode.nodeInitialize,
-                            om.MPxNode.kDependNode)  #èŠ‚ç‚¹ç±»å‹åï¼ŒèŠ‚ç‚¹idï¼Œåˆ›å»ºå‡½æ•°ï¼Œåˆå§‹åŒ–å‡½æ•°
-        om.MGlobal.displayInfo('åŠ è½½æˆåŠŸï¼')
+                            om.MPxNode.kDependNode)  #½ÚµãÀàĞÍÃû£¬½Úµãid£¬´´½¨º¯Êı£¬³õÊ¼»¯º¯Êı
+        om.MGlobal.displayInfo('¼ÓÔØ³É¹¦£¡')
     except Exception as e:
-        om.MGlobal.displayError('åŠ è½½å‘ç”Ÿé”™è¯¯ï¼š{}ã€‚'.format(e))
+        om.MGlobal.displayError('¼ÓÔØ·¢Éú´íÎó£º{}¡£'.format(e))
 
 
 def uninitializePlugin(mobject):
     plugin = om.MFnPlugin(mobject)
     try:
         plugin.deregisterNode(WoDongNode.nodeId)
-        om.MGlobal.displayInfo('å–æ¶ˆåŠ è½½æˆåŠŸï¼')
+        om.MGlobal.displayInfo('È¡Ïû¼ÓÔØ³É¹¦£¡')
     except Exception as e:
-        om.MGlobal.displayError('å–æ¶ˆåŠ è½½å‘ç”Ÿé”™è¯¯ï¼š{}ã€‚'.format(e))
+        om.MGlobal.displayError('È¡Ïû¼ÓÔØ·¢Éú´íÎó£º{}¡£'.format(e))
