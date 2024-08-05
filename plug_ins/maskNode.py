@@ -1,11 +1,11 @@
-#coding=utf-8
+#coding=gbk
 import maya.api.OpenMaya as om
 import maya.api.OpenMayaRender as omr
 import maya.api.OpenMayaUI as omui
 
 import maya.cmds as mc
 
-import datetime
+from datetime import datetime
 import os
 
 def maya_useNewAPI():
@@ -20,12 +20,12 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
     DRAW_DB_CLASSIFICATION = "drawdb/geometry/zurbriggshotmask"
     DRAW_REGISTRANT_ID = "DongShotMaskLocator"
 
-    TEXT_ATTR = [('topLeftText', 'tlt', u'ä¸Šå·¦å­—ç¬¦'), ('topCenterText', 'tct', u'ä¸Šä¸­å­—ç¬¦'), ('topRightText', 'trt', u'ä¸Šå³å­—ç¬¦'),
-                 ('bottomLeftText', 'blt', u'ä¸‹å·¦å­—ç¬¦'), ('bottomCenterText', 'bct', u'ä¸‹ä¸­å­—ç¬¦'), ('bottomRightText', 'brt', u'ä¸‹å³å­—ç¬¦')]
+    TEXT_ATTR = [('topLeftText', 'tlt', u'ÉÏ×ó×Ö·û'), ('topCenterText', 'tct', u'ÉÏÖĞ×Ö·û'), ('topRightText', 'trt', u'ÉÏÓÒ×Ö·û'),
+                 ('bottomLeftText', 'blt', u'ÏÂ×ó×Ö·û'), ('bottomCenterText', 'bct', u'ÏÂÖĞ×Ö·û'), ('bottomRightText', 'brt', u'ÏÂÓÒ×Ö·û')]
 
     def postConstructor(self):
         """
-        å¤å†™å‡½æ•°ï¼Œå°†è¿™ä¸‰ä¸ªå±æ€§åœ¨åˆ›å»ºæ—¶å…³é—­ï¼Œå¦åˆ™åœ¨ä½¿ç”¨æ—¶æ— æ³•çœ‹åˆ°åœºæ™¯ä¸­çš„ç¯å…‰é˜´å½±
+        ¸´Ğ´º¯Êı£¬½«ÕâÈı¸öÊôĞÔÔÚ´´½¨Ê±¹Ø±Õ£¬·ñÔòÔÚÊ¹ÓÃÊ±ÎŞ·¨¿´µ½³¡¾°ÖĞµÄµÆ¹âÒõÓ°
         :return:
         """
         node_fn = om.MFnDependencyNode(self.thisMObject())
@@ -36,7 +36,7 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
     @classmethod
     def creator(cls):
         """
-        åˆ›å»ºèŠ‚ç‚¹å®ä¾‹çš„æ–¹æ³•
+        ´´½¨½ÚµãÊµÀıµÄ·½·¨
         :return:
         """
         return DongShotMaskLocator()
@@ -44,21 +44,21 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
     @classmethod
     def initialize(cls):
         """
-        åˆå§‹åŒ–èŠ‚ç‚¹çš„æ–¹æ³•
+        ³õÊ¼»¯½ÚµãµÄ·½·¨
         :return:
         """
-        numeric_attr = om.MFnNumericAttribute()#æ•°å­—å±æ€§å¯¹è±¡
-        type_attr = om.MFnTypedAttribute()#å­—ç¬¦å±æ€§å¯¹è±¡
-        string_data_fn = om.MFnStringData()#å­—ç¬¦ä¸²å¯¹è±¡ï¼Œä¸æ˜¯å±æ€§ç±»å‹
+        numeric_attr = om.MFnNumericAttribute()#Êı×ÖÊôĞÔ¶ÔÏó
+        type_attr = om.MFnTypedAttribute()#×Ö·ûÊôĞÔ¶ÔÏó
+        string_data_fn = om.MFnStringData()#×Ö·û´®¶ÔÏó£¬²»ÊÇÊôĞÔÀàĞÍ
 
-        #åˆ›å»ºç»˜åˆ¶é®ç½©çš„ç›¸æœºåå±æ€§
-        dft = string_data_fn.create('')#é»˜è®¤å¡«å…¥çš„å€¼
-        camera_name = type_attr.create('camera', 'cam', om.MFnData.kString, dft)#åˆ›å»ºå±æ€§
-        type_attr.setNiceNameOverride(u'ç›¸æœº')#è®¾ç½®niceName
+        #´´½¨»æÖÆÕÚÕÖµÄÏà»úÃûÊôĞÔ
+        dft = string_data_fn.create('')#Ä¬ÈÏÌîÈëµÄÖµ
+        camera_name = type_attr.create('camera', 'cam', om.MFnData.kString, dft)#´´½¨ÊôĞÔ
+        type_attr.setNiceNameOverride(u'Ïà»ú')#ÉèÖÃniceName
         cls.update_attr_properties(type_attr)
         cls.addAttribute(camera_name)
 
-        #åœ¨é®ç½©ä¸Šç»˜åˆ¶çš„å­—ç¬¦å±æ€§
+        #ÔÚÕÚÕÖÉÏ»æÖÆµÄ×Ö·ûÊôĞÔ
         for i, inf in enumerate(cls.TEXT_ATTR):
             dft = string_data_fn.create('Position {}'.format(str(i+1).zfill(2)))
             position = type_attr.create(inf[0], inf[1], om.MFnData.kString, dft)
@@ -66,82 +66,82 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
             cls.update_attr_properties(type_attr)
             cls.addAttribute(position)
 
-        #æ–‡æœ¬å¡«å……å±æ€§
+        #ÎÄ±¾Ìî³äÊôĞÔ
         text_padding = numeric_attr.create('textPadding', 'tp', om.MFnNumericData.kShort, 10)
-        numeric_attr.setNiceNameOverride(u'å­—ç¬¦è¾¹è·')
+        numeric_attr.setNiceNameOverride(u'×Ö·û±ß¾à')
         cls.update_attr_properties(numeric_attr)
         numeric_attr.setMin(0)
         numeric_attr.setMax(50)
         cls.addAttribute(text_padding)
 
-        #å­—ç¬¦åç§°
+        #×Ö·ûÃû³Æ
         dft = string_data_fn.create('consolas')
         font_name = type_attr.create('fontName', 'fn', om.MFnData.kString, dft)
-        type_attr.setNiceNameOverride(u'å­—ç¬¦å­—ä½“')
+        type_attr.setNiceNameOverride(u'×Ö·û×ÖÌå')
         cls.update_attr_properties(type_attr)
         cls.addAttribute(font_name)
 
-        #å­—ç¬¦é¢œè‰²
+        #×Ö·ûÑÕÉ«
         font_color = numeric_attr.createColor('fontColor', 'fc')
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'å­—ç¬¦é¢œè‰²')
+        numeric_attr.setNiceNameOverride(u'×Ö·ûÑÕÉ«')
         numeric_attr.default = (1.0, 1.0, 1.0)
         cls.addAttribute(font_color)
 
-        #å­—ç¬¦é€æ˜åº¦
+        #×Ö·ûÍ¸Ã÷¶È
         font_alpha = numeric_attr.create('fontAlpha', 'fa', om.MFnNumericData.kFloat, 1.0)
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'å­—ç¬¦é€æ˜åº¦')
+        numeric_attr.setNiceNameOverride(u'×Ö·ûÍ¸Ã÷¶È')
         numeric_attr.setMin(0.0)
         numeric_attr.setMax(1.0)
         cls.addAttribute((font_alpha))
 
-        #å­—ç¬¦å¤§å°
+        #×Ö·û´óĞ¡
         font_scale = numeric_attr.create('fontScale', 'fs', om.MFnNumericData.kFloat, 1.0)
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'å­—ç¬¦å¤§å°')
+        numeric_attr.setNiceNameOverride(u'×Ö·û´óĞ¡')
         numeric_attr.setMin(0.1)
         numeric_attr.setMax(2.0)
         cls.addAttribute(font_scale)
 
-        #åˆ†è¾¨ç‡é—¨ä¸­ä¸Šè¾¹è·
+        #·Ö±æÂÊÃÅÖĞÉÏ±ß¾à
         top_border = numeric_attr.create('topBorder', 'tbd', om.MFnNumericData.kBoolean, True)
-        numeric_attr.setNiceNameOverride(u'åˆ†è¾¨ç‡é—¨ä¸Šé®ç½©')
+        numeric_attr.setNiceNameOverride(u'·Ö±æÂÊÃÅÉÏÕÚÕÖ')
         cls.update_attr_properties(numeric_attr)
         cls.addAttribute(top_border)
 
-        #åˆ†è¾¨ç‡é—¨ä¸­ä¸‹è¾¹è·
+        #·Ö±æÂÊÃÅÖĞÏÂ±ß¾à
         bottom_border = numeric_attr.create('buttomBorder', 'bbd', om.MFnNumericData.kBoolean, True)
-        numeric_attr.setNiceNameOverride(u'åˆ†è¾¨ç‡é—¨ä¸‹é®ç½©')
+        numeric_attr.setNiceNameOverride(u'·Ö±æÂÊÃÅÏÂÕÚÕÖ')
         cls.update_attr_properties(numeric_attr)
         cls.addAttribute(bottom_border)
 
-        #è¾¹æ¡†é¢œè‰²
+        #±ß¿òÑÕÉ«
         border_color = numeric_attr.createColor('borderColor', 'bc')
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'åˆ†è¾¨ç‡é—¨é®ç½©é¢œè‰²')
+        numeric_attr.setNiceNameOverride(u'·Ö±æÂÊÃÅÕÚÕÖÑÕÉ«')
         numeric_attr.default = (0.0, 0.0, 0.0)
         cls.addAttribute(border_color)
 
-        #è¾¹æ¡†é€æ˜åº¦
+        #±ß¿òÍ¸Ã÷¶È
         border_alpha = numeric_attr.create('borderAlpha', 'ba', om.MFnNumericData.kFloat, 1.0)
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'åˆ†è¾¨ç‡é—¨é®ç½©é€æ˜åº¦')
+        numeric_attr.setNiceNameOverride(u'·Ö±æÂÊÃÅÕÚÕÖÍ¸Ã÷¶È')
         numeric_attr.setMin(0.0)
         numeric_attr.setMax(1.0)
         cls.addAttribute(border_alpha)
 
-        #è¾¹æ¡†ç¼©æ”¾
+        #±ß¿òËõ·Å
         border_scale = numeric_attr.create('borderScale', 'bs', om.MFnNumericData.kFloat, 1.0)
         cls.update_attr_properties(numeric_attr)
-        numeric_attr.setNiceNameOverride(u'åˆ†è¾¨ç‡é—¨é®ç½©ç¼©æ”¾')
+        numeric_attr.setNiceNameOverride(u'·Ö±æÂÊÃÅÕÚÕÖËõ·Å')
         numeric_attr.setMin(0.5)
         numeric_attr.setMax(2.0)
         cls.addAttribute(border_scale)
 
-        #è®¡æ•°å™¨å¡«å……
+        #¼ÆÊıÆ÷Ìî³ä
         counter_padding = numeric_attr.create('counterPadding', 'cpd', om.MFnNumericData.kShort, 4)
-        numeric_attr.setNiceNameOverride(u'å¸§æ•°å¡«å……')
+        numeric_attr.setNiceNameOverride(u'Ö¡ÊıÌî³ä')
         cls.update_attr_properties(numeric_attr)
         numeric_attr.setMin(1)
         numeric_attr.setMax(6)
@@ -149,10 +149,10 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
 
     @classmethod
     def update_attr_properties(cls, attr):
-        attr.writable = True#å±æ€§å¯å†™
-        attr.storable = True#å¯å‚¨å­˜
-        if attr.type() == om.MFn.kNumericAttribute:#å¦‚æœæ˜¯æ•°å­—ç±»å‹å±æ€§
-            attr.keyable = True #å¯kå¸§
+        attr.writable = True#ÊôĞÔ¿ÉĞ´
+        attr.storable = True#¿É´¢´æ
+        if attr.type() == om.MFn.kNumericAttribute:#Èç¹ûÊÇÊı×ÖÀàĞÍÊôĞÔ
+            attr.keyable = True #¿ÉkÖ¡
 
     def __init__(self):
         super(DongShotMaskLocator, self).__init__()
@@ -164,7 +164,7 @@ class DongShotMaskLocator(omui.MPxLocatorNode):
 
 class DongShotMaskData(om.MUserData):
     """
-    ç”¨æˆ·æ•°æ®ç¼“å­˜
+    ÓÃ»§Êı¾İ»º´æ
     """
     def __init__(self):
         super(DongShotMaskData, self).__init__(False)
@@ -173,43 +173,43 @@ class DongShotMaskData(om.MUserData):
         self.current_time = 0
         self.counter_padding = 4
 
-        self.font_name = "Consolas"#å­—ç¬¦å­—ä½“
+        self.font_name = "Consolas"#×Ö·û×ÖÌå
         self.font_color = om.MColor((1.0, 1.0, 1.0))
         self.font_scale = 1.0
-        self.text_padding = 10#å·¦å³ä¾§å­—ç¬¦è·ç¦»åˆ†è¾¨ç‡é—¨è¾¹ç•Œçš„è·ç¦»
+        self.text_padding = 10#×óÓÒ²à×Ö·û¾àÀë·Ö±æÂÊÃÅ±ß½çµÄ¾àÀë
 
         self.top_border = True
         self.bottom_border = True
         self.border_color = om.MColor((0.0, 0.0, 0.0))
         self.border_scale = 1.0
 
-        self.vp_width = 0#ç›¸æœºæ•´ä½“å¯è§†åƒç´ ï¼Œå³ç›¸æœºè§†å›¾çš„å³ä¸Šè§’ã€‚åŸç‚¹æ˜¯æ•´ä¸ªç›¸æœºè§†å›¾çš„åŸç‚¹
+        self.vp_width = 0#Ïà»úÕûÌå¿ÉÊÓÏñËØ£¬¼´Ïà»úÊÓÍ¼µÄÓÒÉÏ½Ç¡£Ô­µãÊÇÕû¸öÏà»úÊÓÍ¼µÄÔ­µã
         self.vp_height = 0
 
-        self.mask_width = 0#åˆ†è¾¨ç‡é—¨é®ç½©çš„çš„åƒç´ å°ºå¯¸ã€‚åŸç‚¹æ˜¯åˆ†è¾¨ç‡é—¨çš„èµ·å§‹æ¸²æŸ“åŸç‚¹ï¼Œè€Œä¸æ˜¯æ•´ä¸ªç›¸æœºè§†å›¾çš„èµ·å§‹åŸåœ°
+        self.mask_width = 0#·Ö±æÂÊÃÅÕÚÕÖµÄµÄÏñËØ³ß´ç¡£Ô­µãÊÇ·Ö±æÂÊÃÅµÄÆğÊ¼äÖÈ¾Ô­µã£¬¶ø²»ÊÇÕû¸öÏà»úÊÓÍ¼µÄÆğÊ¼Ô­µØ
         self.mask_height = 0
 
     def __str__(self):
         output = ''
-        output += u'textï¼š{}\n'.format(self.parsed_fields)
+        output += u'text£º{}\n'.format(self.parsed_fields)
 
-        output += u'Current Timeï¼š{}\n'.format(self.current_time)
-        output += u'Counter Paddingï¼š{}\n'.format(self.counter_padding)
+        output += u'Current Time£º{}\n'.format(self.current_time)
+        output += u'Counter Padding£º{}\n'.format(self.counter_padding)
 
-        output += u'Font Colorï¼š{}\n'.format(self.font_color)
-        output += u'Font Scaleï¼š{}\n'.format(self.font_scale)
-        output += u'Text Paddingï¼š{}\n'.format(self.text_padding)
+        output += u'Font Color£º{}\n'.format(self.font_color)
+        output += u'Font Scale£º{}\n'.format(self.font_scale)
+        output += u'Text Padding£º{}\n'.format(self.text_padding)
 
-        output += u'Top Borderï¼š{}\n'.format(self.top_border)
-        output += u'Bottom Borderï¼š{}\n'.format(self.bottom_border)
-        output += u'Border Colorï¼š{}\n'.format(self.border_color)
+        output += u'Top Border£º{}\n'.format(self.top_border)
+        output += u'Bottom Border£º{}\n'.format(self.bottom_border)
+        output += u'Border Color£º{}\n'.format(self.border_color)
 
         return output.encode('unicode_escape').decode()
 
 
 class DongMaskDrawOverride(omr.MPxDrawOverride):
     """
-    MPxDrawOverrideå®šä¹‰äº†è‡ªå®šä¹‰çš„ç»˜åˆ¶è¦†ç›–é€»è¾‘
+    MPxDrawOverride¶¨ÒåÁË×Ô¶¨ÒåµÄ»æÖÆ¸²¸ÇÂß¼­
     """
     NAME = "donghotmask_draw_override"
 
@@ -244,24 +244,24 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
 
     def prepareForDraw(self, obj_path, camera_path, frame_context, old_data):
         """
-        ç»˜å›¾å‡†å¤‡
-        :param obj_path:åˆ›å»ºçš„è‡ªå®šä¹‰èŠ‚ç‚¹å
-        :param camera_path:å½“å‰ä½¿ç”¨çš„ç›¸æœºshapeå
-        :param frame_context:åŒ…å«å½“å‰æ¸²æŸ“å¸§çš„ä¸€äº›å…¨å±€ä¿¡æ¯
-        :param old_data:ç”¨æˆ·ä¿¡æ¯ç±»å¯¹è±¡
+        »æÍ¼×¼±¸
+        :param obj_path:´´½¨µÄ×Ô¶¨Òå½ÚµãÃû
+        :param camera_path:µ±Ç°Ê¹ÓÃµÄÏà»úshapeÃû
+        :param frame_context:°üº¬µ±Ç°äÖÈ¾Ö¡µÄÒ»Ğ©È«¾ÖĞÅÏ¢
+        :param old_data:ÓÃ»§ĞÅÏ¢Àà¶ÔÏó
         :return:
         """
         data = old_data
         if not isinstance(data, DongShotMaskData):
-            data = DongShotMaskData()#æ—§åå˜æ–°å
+            data = DongShotMaskData()#¾ÉÃû±äĞÂÃû
 
-        dag_fn = om.MFnDagNode(obj_path)#è‡ªå®šä¹‰èŠ‚ç‚¹å¯¹è±¡
+        dag_fn = om.MFnDagNode(obj_path)#×Ô¶¨Òå½Úµã¶ÔÏó
         camera_name = dag_fn.findPlug('camera', False).asString()
-        #ç›¸æœºåå¡«å…¥éåœºæ™¯å†…çš„ç›¸æœºå˜æ¢åç§°æˆ–ä¸ºç©ºéƒ½ä¼šå¯¹æ‰€æœ‰ç›¸æœºåšç»˜åˆ¶
+        #Ïà»úÃûÌîÈë·Ç³¡¾°ÄÚµÄÏà»ú±ä»»Ãû³Æ»òÎª¿Õ¶¼»á¶ÔËùÓĞÏà»ú×ö»æÖÆ
         if camera_name and self.camera_exists(camera_name) and not self.is_camera_match(camera_path, camera_name):
-            return None#å½“å±æ€§ä¸­çš„æ—§ç›¸æœºåå¯¹è±¡ä¸æ–°ç›¸æœºåå¯¹è±¡ç›¸åŒæ—¶ä¸åšå¤„ç†
+            return None#µ±ÊôĞÔÖĞµÄ¾ÉÏà»úÃû¶ÔÏóÓëĞÂÏà»úÃû¶ÔÏóÏàÍ¬Ê±²»×ö´¦Àí
 
-        #å‘ç”¨æˆ·ä¿¡æ¯ç±»ä¸­çš„å±æ€§å–å€¼ï¼Œä»èŠ‚ç‚¹çš„å±æ€§ä¸­
+        #ÏòÓÃ»§ĞÅÏ¢ÀàÖĞµÄÊôĞÔÈ¡Öµ£¬´Ó½ÚµãµÄÊôĞÔÖĞ
         data.current_time = int(mc.currentTime(q=True))
         data.counter_padding = dag_fn.findPlug('counterPadding', False).asInt()
         data.text_padding = dag_fn.findPlug('textPadding', False).asInt()
@@ -284,45 +284,45 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
         data.top_border = dag_fn.findPlug('topBorder', False).asBool()
         data.bottom_border = dag_fn.findPlug('buttomBorder', False).asBool()
 
-        #è·å–ç›¸æœºè§†å›¾çš„å°ºå¯¸ï¼ŒåŸç‚¹åœ¨å·¦ä¸Šè§’ã€‚[0, 0, å®½åƒç´ ä¸ªæ•°, é«˜åƒç´ ä¸ªæ•°]
+        #»ñÈ¡Ïà»úÊÓÍ¼µÄ³ß´ç£¬Ô­µãÔÚ×óÉÏ½Ç¡£[0, 0, ¿íÏñËØ¸öÊı, ¸ßÏñËØ¸öÊı]
         vp_x, vp_y, data.vp_width, data.vp_height = frame_context.getViewportDimensions()
-        if not (data.vp_width and data.vp_height):#å¦‚æœç›¸æœºå°ºå¯¸ä¸º0
+        if not (data.vp_width and data.vp_height):#Èç¹ûÏà»ú³ß´çÎª0
             return None
         data.mask_width, data.mask_height = self.get_mask_width_height(camera_path, data.vp_width, data.vp_height)
         if not (data.mask_width and data.mask_height):
             return None
 
-        data.parsed_fields = []#å‘å­—ç¬¦åˆ—è¡¨ä¸­å¡«å…¥å­—ç¬¦ï¼Œæ–¹ä¾¿ç»˜åˆ¶å­—ç¬¦æ—¶å–ç”¨
+        data.parsed_fields = []#Ïò×Ö·ûÁĞ±íÖĞÌîÈë×Ö·û£¬·½±ã»æÖÆ×Ö·ûÊ±È¡ÓÃ
         for inf in DongShotMaskLocator.TEXT_ATTR:
-            orig_text = dag_fn.findPlug(inf[0], False).asString()#è·å–èŠ‚ç‚¹ä¸­è¯¥å±æ€§çš„å€¼
+            orig_text = dag_fn.findPlug(inf[0], False).asString()#»ñÈ¡½ÚµãÖĞ¸ÃÊôĞÔµÄÖµ
             parsed_text = self.parse_text(orig_text, camera_path, data)
             data.parsed_fields.append(parsed_text)
 
-        return data#ä¸åŒæ—¶è¿”å›æ–°ç”¨æˆ·ä¿¡æ¯
+        return data#²»Í¬Ê±·µ»ØĞÂÓÃ»§ĞÅÏ¢
 
     def get_mask_width_height(self, camera_path, vp_width, vp_height):
         """
-        è·å–é®ç½©çš„å®½é«˜
-        :param camera_path:ç›¸æœºå¯¹è±¡
-        :param vp_width: #ç›¸æœºè§†å›¾å®½åº¦ï¼ˆåƒç´ ï¼‰
-        :param vp_height:#ç›¸æœºè§†å›¾é«˜åº¦
-        :return:åˆ†è¾¨ç‡é—¨çš„æœ€å¤§å°ºå¯¸åœ¨æ•´ä¸ªç›¸æœºè§†å›¾ä¸­çš„åƒç´ ä½ç½®
+        »ñÈ¡ÕÚÕÖµÄ¿í¸ß
+        :param camera_path:Ïà»ú¶ÔÏó
+        :param vp_width: #Ïà»úÊÓÍ¼¿í¶È£¨ÏñËØ£©
+        :param vp_height:#Ïà»úÊÓÍ¼¸ß¶È
+        :return:·Ö±æÂÊÃÅµÄ×î´ó³ß´çÔÚÕû¸öÏà»úÊÓÍ¼ÖĞµÄÏñËØÎ»ÖÃ
         """
         camera_fn = om.MFnCamera(camera_path)
-        device_aspect_ratio = mc.getAttr('defaultResolution.deviceAspectRatio')#å®½é«˜æ¯”
+        device_aspect_ratio = mc.getAttr('defaultResolution.deviceAspectRatio')#¿í¸ß±È
         camera_aspect_ratio = camera_fn.aspectRatio()
         vp_aspect_ratio = vp_width/float(vp_height)
         scale = 1.0
 
-        #overscanå±æ€§çš„å€¼æ˜¯æ¸²æŸ“æ¡†æŸè¾¹åˆ°ç›¸æœºè§†å›¾æ¡†è¾¹ç•Œçš„æ¯”å€¼ï¼Œæœªæ‰“å¼€åˆ†è¾¨ç‡é—¨æ—¶ä¸º1ï¼Œæ‰“å¼€æ—¶é»˜è®¤ä¸º1.3ã€‚è¯¥å±æ€§å¯ä»¥åœ¨ç›¸æœºshapeçš„displayOptionsä¸­çœ‹åˆ°
-        #camera_fn.filmFitæ˜¯æŒ‡ç›¸æœºshapeçš„fitResolutionGateæšä¸¾å±æ€§ã€‚Horizontalï¼šä¿è¯å®½ä¸ºoverscançš„æ¯”å€¼ï¼›Verticalï¼šä¿è¯é«˜ä¸ºoverscançš„æ¯”å€¼
-        if camera_fn.filmFit == om.MFnCamera.kHorizontalFilmFit:#é”å®½åº¦å€¼æ—¶
-            mask_width = vp_width/camera_fn.overscan#æ‰“å¼€é®ç½©åï¼Œåˆ†è¾¨ç‡é—¨çš„æ¸²æŸ“å°ºå¯¸
+        #overscanÊôĞÔµÄÖµÊÇäÖÈ¾¿òÄ³±ßµ½Ïà»úÊÓÍ¼¿ò±ß½çµÄ±ÈÖµ£¬Î´´ò¿ª·Ö±æÂÊÃÅÊ±Îª1£¬´ò¿ªÊ±Ä¬ÈÏÎª1.3¡£¸ÃÊôĞÔ¿ÉÒÔÔÚÏà»úshapeµÄdisplayOptionsÖĞ¿´µ½
+        #camera_fn.filmFitÊÇÖ¸Ïà»úshapeµÄfitResolutionGateÃ¶¾ÙÊôĞÔ¡£Horizontal£º±£Ö¤¿íÎªoverscanµÄ±ÈÖµ£»Vertical£º±£Ö¤¸ßÎªoverscanµÄ±ÈÖµ
+        if camera_fn.filmFit == om.MFnCamera.kHorizontalFilmFit:#Ëø¿í¶ÈÖµÊ±
+            mask_width = vp_width/camera_fn.overscan#´ò¿ªÕÚÕÖºó£¬·Ö±æÂÊÃÅµÄäÖÈ¾³ß´ç
             mask_height = mask_width/device_aspect_ratio
-        elif camera_fn.filmFit == om.MFnCamera.kVerticalFilmFit:#é”é«˜åº¦å€¼æ—¶
+        elif camera_fn.filmFit == om.MFnCamera.kVerticalFilmFit:#Ëø¸ß¶ÈÖµÊ±
             mask_height = vp_height/camera_fn.overscan
             mask_width = mask_height*device_aspect_ratio
-        elif camera_fn.filmFit == om.MFnCamera.kFillFilmFit:#å¡«å……ï¼Œåˆ†è¾¨ç‡é—¨å¯èƒ½ä¼šç›´æ¥é¡¶åˆ°è§†å›¾è¾¹ç•Œ
+        elif camera_fn.filmFit == om.MFnCamera.kFillFilmFit:#Ìî³ä£¬·Ö±æÂÊÃÅ¿ÉÄÜ»áÖ±½Ó¶¥µ½ÊÓÍ¼±ß½ç
             if vp_aspect_ratio<device_aspect_ratio:
                 if camera_aspect_ratio<device_aspect_ratio:
                     scale = camera_aspect_ratio/vp_aspect_ratio
@@ -333,7 +333,7 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
 
             mask_width = vp_width / camera_fn.overscan*scale
             mask_height = mask_width / device_aspect_ratio
-        elif camera_fn.filmFit == om.MFnCamera.kOverscanFilmFit:#ä¿æŒæœ€å°è¾¹è·ï¼Œåˆ†è¾¨ç‡é—¨ä¸è§†å›¾è¾¹ç•Œæœ€æ¥è¿‘çš„æ–¹å‘ä¹Ÿä¼šä¿æŒæœ€å°è·ç¦»
+        elif camera_fn.filmFit == om.MFnCamera.kOverscanFilmFit:#±£³Ö×îĞ¡±ß¾à£¬·Ö±æÂÊÃÅÓëÊÓÍ¼±ß½ç×î½Ó½üµÄ·½ÏòÒ²»á±£³Ö×îĞ¡¾àÀë
             if vp_aspect_ratio<device_aspect_ratio:
                 if camera_aspect_ratio<device_aspect_ratio:
                     scale = camera_aspect_ratio/vp_aspect_ratio
@@ -345,14 +345,14 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
             mask_height = vp_height / camera_fn.overscan/scale
             mask_width = mask_height * device_aspect_ratio
         else:
-            om.MGlobal.displayError(u'ä¸æ”¯æŒçš„æ‹Ÿåˆåˆ†è¾¨ç‡é—¨ï¼š{}ã€‚'.format(camera_fn.filmFit))
+            om.MGlobal.displayError(u'²»Ö§³ÖµÄÄâºÏ·Ö±æÂÊÃÅ£º{}¡£'.format(camera_fn.filmFit))
             return None, None
 
         return mask_width, mask_height
 
     def addUIDrawables(self, obj_path, draw_manager, frame_context, data):
         """
-        è´Ÿè´£æ‰€æœ‰ç»˜åˆ¶æ“ä½œ
+        ¸ºÔğËùÓĞ»æÖÆ²Ù×÷
         :param obj_path:
         :param draw_manager:
         :param frame_context:
@@ -361,41 +361,41 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
         """
         if not (data and isinstance(data, DongShotMaskData)):
             return
-        #ç›¸æœºè§†å›¾çš„åŸç‚¹(0, 0)åœ¨å·¦ä¸‹è§’
-        vp_half_width = 0.5*data.vp_width#ç›¸æœºè§†å›¾çš„ä¸€åŠå®½
-        vp_half_height = 0.5*data.vp_height#ç›¸æœºè§†å›¾çš„ä¸€åŠé«˜
+        #Ïà»úÊÓÍ¼µÄÔ­µã(0, 0)ÔÚ×óÏÂ½Ç
+        vp_half_width = 0.5*data.vp_width#Ïà»úÊÓÍ¼µÄÒ»°ë¿í
+        vp_half_height = 0.5*data.vp_height#Ïà»úÊÓÍ¼µÄÒ»°ë¸ß
 
-        mask_half_width = 0.5*data.mask_width#åˆ†è¾¨ç‡é—¨çš„ä¸€åŠå®½
-        mask_x = vp_half_width-mask_half_width#é®ç½©æ¨ªå‘xçš„èµ·å§‹ç‚¹
+        mask_half_width = 0.5*data.mask_width#·Ö±æÂÊÃÅµÄÒ»°ë¿í
+        mask_x = vp_half_width-mask_half_width#ÕÚÕÖºáÏòxµÄÆğÊ¼µã
 
-        mask_half_height = 0.5*data.mask_height#åˆ†è¾¨ç‡é—¨çš„ä¸€åŠé«˜
-        mask_bottom_y = vp_half_height-mask_half_height#é®ç½©ç«–å‘yçš„èµ·å§‹ç‚¹
-        mask_top_y = vp_half_height+ mask_half_height#åˆ†è¾¨ç‡é—¨æœ€ä¸‹æ–¹çš„é«˜
+        mask_half_height = 0.5*data.mask_height#·Ö±æÂÊÃÅµÄÒ»°ë¸ß
+        mask_bottom_y = vp_half_height-mask_half_height#ÕÚÕÖÊúÏòyµÄÆğÊ¼µã
+        mask_top_y = vp_half_height+ mask_half_height#·Ö±æÂÊÃÅ×îÏÂ·½µÄ¸ß
 
-        border_height = int(0.05 * data.mask_height*data.border_scale)#åˆ†è¾¨ç‡é—¨é®ç½©çš„é«˜åº¦
+        border_height = int(0.05 * data.mask_height*data.border_scale)#·Ö±æÂÊÃÅÕÚÕÖµÄ¸ß¶È
         background_size = (int(data.mask_width), border_height)
         font_size = int(0.85*border_height*data.font_scale)
 
-        draw_manager.beginDrawable()#å¼€å§‹ç»˜
-        #ç»˜åˆ¶åˆ†è¾¨ç‡é—¨å†…çš„é®ç½©
-        if data.top_border:#ä¸‹é¢çš„é®ç½©ï¼Œå› ä¸ºåŸç‚¹åœ¨å·¦ä¸Šè§’ï¼Œæ‰€ä»¥yè½´é«˜å€¼åœ¨ä¸‹æ–¹ã€‚
-            #ç”±äºè¦åœ¨åŒä¸€ä¸ªä½ç½®ç»˜åˆ¶ä¸¤ä¸ªå†…å®¹ï¼ˆè¿™é‡Œçš„é®ç½©å’Œä¸‹é¢çš„æ–‡å­—ï¼‰æ‰€ä»¥åœ¨MPointä¸­åŠ å…¥çš„0.1ç”¨æ¥è®©apiçŸ¥é“è°åœ¨è°çš„ä¸‹é¢ã€‚å€¼è¶Šå°ï¼Œè¢«ç»˜åˆ¶å†…å®¹è¶Šé å‰ï¼›å€¼è¶Šå¤§ï¼Œè¶Šåœ¨åº•å±‚
+        draw_manager.beginDrawable()#¿ªÊ¼»æ
+        #»æÖÆ·Ö±æÂÊÃÅÄÚµÄÕÚÕÖ
+        if data.top_border:#ÏÂÃæµÄÕÚÕÖ£¬ÒòÎªÔ­µãÔÚ×óÉÏ½Ç£¬ËùÒÔyÖá¸ßÖµÔÚÏÂ·½¡£
+            #ÓÉÓÚÒªÔÚÍ¬Ò»¸öÎ»ÖÃ»æÖÆÁ½¸öÄÚÈİ£¨ÕâÀïµÄÕÚÕÖºÍÏÂÃæµÄÎÄ×Ö£©ËùÒÔÔÚMPointÖĞ¼ÓÈëµÄ0.1ÓÃÀ´ÈÃapiÖªµÀË­ÔÚË­µÄÏÂÃæ¡£ÖµÔ½Ğ¡£¬±»»æÖÆÄÚÈİÔ½¿¿Ç°£»ÖµÔ½´ó£¬Ô½ÔÚµ×²ã
             self.draw_border(draw_manager, om.MPoint(mask_x, mask_top_y-border_height, 0.1), background_size, data.border_color)
-        if data.bottom_border:#ä¸Šæ–¹é®ç½©ã€‚
+        if data.bottom_border:#ÉÏ·½ÕÚÕÖ¡£
             self.draw_border(draw_manager, om.MPoint(mask_x, mask_bottom_y, 0.1), background_size, data.border_color)
 
-        #ç»˜åˆ¶åˆ†è¾¨ç‡é—¨å†…é®ç½©ä¸Šçš„å­—ç¬¦
+        #»æÖÆ·Ö±æÂÊÃÅÄÚÕÚÕÖÉÏµÄ×Ö·û
         draw_manager.setFontName(data.font_name)
         draw_manager.setFontSize(font_size)
 
-        #ç»˜åˆ¶è§†å›¾ä¸‹æ–¹çš„å­—ç¬¦
+        #»æÖÆÊÓÍ¼ÏÂ·½µÄ×Ö·û
         self.draw_label(draw_manager, om.MPoint(mask_x+data.text_padding, mask_top_y - border_height, 0.0), data, 0,
                         omr.MUIDrawManager.kLeft, background_size)
         self.draw_label(draw_manager, om.MPoint(vp_half_width, mask_top_y-border_height, 0.0), data, 1,
                         omr.MUIDrawManager.kCenter, background_size)
         self.draw_label(draw_manager, om.MPoint(mask_x +data.mask_width- data.text_padding, mask_top_y - border_height, 0.0), data, 2,
                         omr.MUIDrawManager.kRight, background_size)
-        #ç»˜åˆ¶è§†å›¾ä¸Šæ–¹çš„å­—ç¬¦
+        #»æÖÆÊÓÍ¼ÉÏ·½µÄ×Ö·û
         self.draw_label(draw_manager, om.MPoint(mask_x + data.text_padding, mask_bottom_y, 0.0), data, 3,
                         omr.MUIDrawManager.kLeft, background_size)
         self.draw_label(draw_manager, om.MPoint(vp_half_width, mask_bottom_y, 0.0), data, 4,
@@ -403,35 +403,35 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
         self.draw_label(draw_manager, om.MPoint(mask_x + data.mask_width - data.text_padding, mask_bottom_y, 0.0),
                         data, 5, omr.MUIDrawManager.kRight, background_size)
 
-        draw_manager.endDrawable()#ç»˜åˆ¶ç»“æŸ
+        draw_manager.endDrawable()#»æÖÆ½áÊø
 
     def draw_border(self, draw_manager, position, background_size, color):
         """
-        åœ¨åˆ†è¾¨ç‡é—¨ä¸­ç»˜åˆ¶é®ç½©ï¼Œå› ä¸ºéƒ¨åˆ†æ˜¾ç¤ºå™¨ä¼šè£åˆ‡ç”»é¢ï¼Œæˆ–è¾¹ç¼˜ä½ç½®ç›¸æœºå¯¹ç”»é¢æœ‰æ‹‰ä¼¸ï¼Œæˆ–å­—å¹•ä¼šå ç”¨è¾¹æ¡†ä¸€æ®µè·ç¦»
-        :param draw_manager:ç»˜åˆ¶ç®¡ç†å™¨å¯¹è±¡
-        :param position: èµ·å§‹ä½ç½®
-        :param background_size:ï¼ˆç»˜åˆ¶å®½åº¦ï¼Œç»˜åˆ¶é«˜åº¦ï¼‰
-        :param color: ç»˜åˆ¶é¢œè‰²
+        ÔÚ·Ö±æÂÊÃÅÖĞ»æÖÆÕÚÕÖ£¬ÒòÎª²¿·ÖÏÔÊ¾Æ÷»á²ÃÇĞ»­Ãæ£¬»ò±ßÔµÎ»ÖÃÏà»ú¶Ô»­ÃæÓĞÀ­Éì£¬»ò×ÖÄ»»áÕ¼ÓÃ±ß¿òÒ»¶Î¾àÀë
+        :param draw_manager:»æÖÆ¹ÜÀíÆ÷¶ÔÏó
+        :param position: ÆğÊ¼Î»ÖÃ
+        :param background_size:£¨»æÖÆ¿í¶È£¬»æÖÆ¸ß¶È£©
+        :param color: »æÖÆÑÕÉ«
         :return:
         """
-        #èµ·å§‹ä½ç½®ï¼Œæ–‡å­—å†…å®¹ï¼Œæ–‡å­—æ’ç‰ˆä½ç½®ï¼ŒèƒŒæ™¯å›¾å°ºå¯¸ï¼ŒèƒŒæ™¯å›¾é¢œè‰²
+        #ÆğÊ¼Î»ÖÃ£¬ÎÄ×ÖÄÚÈİ£¬ÎÄ×ÖÅÅ°æÎ»ÖÃ£¬±³¾°Í¼³ß´ç£¬±³¾°Í¼ÑÕÉ«
         draw_manager.text2d(position, ' ', alignment=omr.MUIDrawManager.kLeft, backgroundSize=background_size, backgroundColor=color)
 
     def draw_label(self, draw_manager, position, data, data_index, alignment, background_size):
-        if data.parsed_fields[data_index]['image_path']:#å½“ç»˜åˆ¶å†…å®¹ä¸ºå›¾åƒæ—¶
+        if data.parsed_fields[data_index]['image_path']:#µ±»æÖÆÄÚÈİÎªÍ¼ÏñÊ±
             self.draw_image(draw_manager, position, data, data_index, alignment, background_size)
             return
 
         text = data.parsed_fields[data_index]['text']
         draw_manager.setColor(data.font_color)
-        if text:#ç»˜åˆ¶å­—ç¬¦ï¼Œå­—ç¬¦èƒŒæ™¯ä¸ºé€æ˜
+        if text:#»æÖÆ×Ö·û£¬×Ö·û±³¾°ÎªÍ¸Ã÷
             draw_manager.text2d(position, text, alignment=alignment, backgroundSize=background_size, backgroundColor=om.MColor((0.0, 0.0, 0.0, 0.0)))
 
     def draw_image(self, draw_manager, position, data, data_index, alignment, background_size):
         texture_manager = omr.MRenderer.getTextureManager()
-        texture = texture_manager.acquireTexture(data.parsed_fields[data_index]['image_path'])#è·å–å›¾ç‰‡æ–‡ä»¶è·¯å¾„
+        texture = texture_manager.acquireTexture(data.parsed_fields[data_index]['image_path'])#»ñÈ¡Í¼Æ¬ÎÄ¼şÂ·¾¶
         if not texture:
-            om.MGlobal.displayError(u'ä¸æ”¯æŒçš„æ–‡ä»¶æ ¼å¼{}'.format(data.parsed_fields[data_index]['image_path']))
+            om.MGlobal.displayError(u'²»Ö§³ÖµÄÎÄ¼ş¸ñÊ½{}'.format(data.parsed_fields[data_index]['image_path']))
             return
 
         draw_manager.setTexture(texture)
@@ -441,7 +441,7 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
 
         texture_desc = texture.textureDescription()
         scale_y = (0.5*background_size[1]) - 2
-        scale_x = scale_y/texture_desc.fHeight*texture_desc.fWidth#é€šè¿‡å›¾ç‰‡åœ¨é®ç½©ä¸­çš„é«˜åº¦è®¡ç®—å‡ºå›¾ç‰‡åº”æœ‰çš„å®½åº¦
+        scale_x = scale_y/texture_desc.fHeight*texture_desc.fWidth#Í¨¹ıÍ¼Æ¬ÔÚÕÚÕÖÖĞµÄ¸ß¶È¼ÆËã³öÍ¼Æ¬Ó¦ÓĞµÄ¿í¶È
 
         if alignment == omr.MUIDrawManager.kLeft:
             position = om.MPoint(position.x+scale_x, position.y +int(0.5*background_size[1]), position.z)
@@ -457,17 +457,23 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
         if scene_name:
             scene_name = os.path.splitext(scene_name)[0]
         else:
-            scene_name = u'æœªçŸ¥åœºæ™¯'
+            scene_name = u'Î´Öª³¡¾°'
         return scene_name
 
     def get_date(self):
-        return datetime.date.today().strftime('%Y/%m/%d')
+        weekdays_in_chinese = {0: "ĞÇÆÚÒ»", 1: "ĞÇÆÚ¶ş", 2: "ĞÇÆÚÈı", 3: "ĞÇÆÚËÄ",
+                               4: "ĞÇÆÚÎå", 5: "ĞÇÆÚÁù", 6: "ĞÇÆÚÈÕ"}
+        now = datetime.now()
+        date_str = now.strftime("%Y-%m-%d")  # Äê-ÔÂ-ÈÕ
+        time_str = now.strftime("%H:%M")     # Ê±:·Ö
+        weekday_str = weekdays_in_chinese[now.weekday()]
+        return '{}/{}/{}'.format(date_str, time_str, weekday_str)
 
     def get_image(self, image_path):
-        image_path = image_path.strip()#ç§»é™¤å­—ç¬¦ä¸²å¤´å°¾æŒ‡å®šçš„å­—ç¬¦ï¼ˆé»˜è®¤ä¸ºç©ºæ ¼æˆ–æ¢è¡Œç¬¦ï¼‰æˆ–å­—ç¬¦åºåˆ—
+        image_path = image_path.strip()#ÒÆ³ı×Ö·û´®Í·Î²Ö¸¶¨µÄ×Ö·û£¨Ä¬ÈÏÎª¿Õ¸ñ»ò»»ĞĞ·û£©»ò×Ö·ûĞòÁĞ
         if os.path.exists(image_path):
             return image_path, ''
-        return '', u'å›¾åƒä¸å­˜åœ¨'
+        return '', u'Í¼Ïñ²»´æÔÚ'
 
     def camera_exists(self, name):
         dg_iter = om.MItDependencyNodes(om.MFn.kCamera)
@@ -484,20 +490,29 @@ class DongMaskDrawOverride(omr.MPxDrawOverride):
             return True
         return False
 
+    def get_camera_focalLength(self):
+        view = omui.M3dView.active3dView()
+        camDag = view.getCamera()
+        camera = camDag.fullPathName()
+        name= mc.listRelatives(camera, parent = True)[0]
+        return round(mc.getAttr('{}.focalLength'.format(name)), 3)
+
     def parse_text(self, orig_text, camera_path, data):
         image_path = ''
-        text = orig_text#æ–‡å­—è¾“å…¥æ¡†ä¸­çš„å­—ç¬¦å€¼
+        text = orig_text#ÎÄ×ÖÊäÈë¿òÖĞµÄ×Ö·ûÖµ
 
         if '{counter}' in text:
-            text = text.replace('{counter}', '{0}'.format(str(data.current_time).zfill(data.counter_padding)))
+            text = text.replace('{counter}', '{}/{}'.format(str(data.current_time).zfill(data.counter_padding), mc.playbackOptions(q=True, max=True)))
         if '{scene}' in text:
             text = text.replace('{scene}', self.get_scene_name())
         if '{date}' in text:
             text = text.replace('{date}', self.get_date())
         if '{camera}' in text:
             text = text.replace('{camera}', self.camera_transform_name(camera_path))
+        if '{focalLength}' in text:
+            text = text.replace('{focalLength}', u'½¹¾à:{}'.format(self.get_camera_focalLength()))
 
-        stripped_text = text.strip()#ç§»é™¤å­—ç¬¦ä¸²å¤´å°¾æŒ‡å®šçš„å­—ç¬¦ï¼ˆé»˜è®¤ä¸ºç©ºæ ¼æˆ–æ¢è¡Œç¬¦ï¼‰æˆ–å­—ç¬¦åºåˆ—
+        stripped_text = text.strip()#ÒÆ³ı×Ö·û´®Í·Î²Ö¸¶¨µÄ×Ö·û£¨Ä¬ÈÏÎª¿Õ¸ñ»ò»»ĞĞ·û£©»ò×Ö·ûĞòÁĞ
         if stripped_text.startswith('{image=') and stripped_text.endswith('}'):
             image_path, text = self.get_image(stripped_text[7:-1])
 
@@ -517,16 +532,16 @@ def initializePlugin(obj):
                                DongShotMaskLocator.initialize,
                                om.MPxNode.kLocatorNode,
                                DongShotMaskLocator.DRAW_DB_CLASSIFICATION)
-        print(u'æ’ä»¶{}å·²åŠ è½½'.format(DongShotMaskLocator.NAME))
+        print(u'²å¼ş{}ÒÑ¼ÓÔØ'.format(DongShotMaskLocator.NAME))
     except:
-        om.MGlobal.displayError(u"èŠ‚ç‚¹æ³¨å†Œå¤±è´¥: {0}".format(DongShotMaskLocator.NAME))
+        om.MGlobal.displayError(u"½Úµã×¢²áÊ§°Ü: {0}".format(DongShotMaskLocator.NAME))
 
     try:
         omr.MDrawRegistry.registerDrawOverrideCreator(DongShotMaskLocator.DRAW_DB_CLASSIFICATION,
                                                       DongShotMaskLocator.DRAW_REGISTRANT_ID,
                                                       DongMaskDrawOverride.creator)
     except:
-        om.MGlobal.displayError(u"æ— æ³•æ³¨å†Œç»˜åˆ¶è¦†ç›–: {0}".format(DongMaskDrawOverride.NAME))
+        om.MGlobal.displayError(u"ÎŞ·¨×¢²á»æÖÆ¸²¸Ç: {0}".format(DongMaskDrawOverride.NAME))
 
 
 def uninitializePlugin(obj):
@@ -537,12 +552,12 @@ def uninitializePlugin(obj):
     try:
         omr.MDrawRegistry.deregisterDrawOverrideCreator(DongShotMaskLocator.DRAW_DB_CLASSIFICATION, DongShotMaskLocator.DRAW_REGISTRANT_ID)
     except:
-        om.MGlobal.displayError(u"æ— æ³•å–æ¶ˆæ³¨å†Œç»˜åˆ¶è¦†ç›–: {0}".format(DongMaskDrawOverride.NAME))
+        om.MGlobal.displayError(u"ÎŞ·¨È¡Ïû×¢²á»æÖÆ¸²¸Ç: {0}".format(DongMaskDrawOverride.NAME))
 
     try:
         plugin_fn.deregisterNode(DongShotMaskLocator.TYPE_ID)
     except:
-        om.MGlobal.displayError(u"æ³¨é”€èŠ‚ç‚¹å¤±è´¥: {0}".format(DongShotMaskLocator.NAME))
+        om.MGlobal.displayError(u"×¢Ïú½ÚµãÊ§°Ü: {0}".format(DongShotMaskLocator.NAME))
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-#coding:utf-8
+#coding:gbk
 
 from functools import partial
 
@@ -113,7 +113,7 @@ class MyComboBox(QtWidgets.QComboBox):
 
 
 class DongShotMaskUi(QtWidgets.QDialog):
-    WINDOW_TITLE = u"é®ç½©åˆ›å»ºå·¥å…·"
+    WINDOW_TITLE = u"ÕÚÕÖ´´½¨¹¤¾ß"
 
     PLUG_IN_NAME = "maskNode"
     NODE_TYPE = "DongShotMask"
@@ -121,11 +121,11 @@ class DongShotMaskUi(QtWidgets.QDialog):
     TRANSFORM_NAME = "DongShotMask"
     SHAPE_NAME = "DongShotMaskShape"
 
-    TEXT_LABELS = [u"ä¸Šå·¦", u"ä¸Šä¸­", u"ä¸Šå³", u"ä¸‹å·¦", u"ä¸‹ä¸­", u"ä¸‹å³"]
+    TEXT_LABELS = [u"ÉÏ×ó", u"ÉÏÖĞ", u"ÉÏÓÒ", u"ÏÂ×ó", u"ÏÂÖĞ", u"ÏÂÓÒ"]
     TEXT_ATTRIBUTES = ["topLeftText", "topCenterText", "topRightText", "bottomLeftText", "bottomCenterText",
                        "bottomRightText"]
 
-    OPT_VAR_CAMERA = 'Dong_Camera'  #è‡ªå®šä¹‰å…¨å±€å˜é‡å
+    OPT_VAR_CAMERA = 'Dong_Camera'  #×Ô¶¨ÒåÈ«¾Ö±äÁ¿Ãû
     OPT_VAR_TEXT = "Dong_Text"
     OPT_VAR_FONT = "Dong_Font"
     OPT_VAR_FONT_COLOR = "Dong_FontColor"
@@ -168,7 +168,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
         self.font_le = QtWidgets.QLineEdit()
         self.font_le.setEnabled(False)
 
-        self.font_select_btn = QtWidgets.QPushButton(u"å­—å·é€‰æ‹©")
+        self.font_select_btn = QtWidgets.QPushButton(u"×ÖºÅÑ¡Ôñ")
         self.font_select_btn.setFixedSize(button_width, button_height)
 
         self.font_color_btn = DongColorButton()
@@ -191,9 +191,9 @@ class DongShotMaskUi(QtWidgets.QDialog):
         self.font_scale_dsb.setDecimals(3)
         self.font_scale_dsb.setButtonSymbols(QtWidgets.QSpinBox.NoButtons)
 
-        self.top_border_cb = QtWidgets.QCheckBox(u"ä¸Šæ–¹")
+        self.top_border_cb = QtWidgets.QCheckBox(u"ÉÏ·½")
         self.top_border_cb.setChecked(True)
-        self.bottom_border_cb = QtWidgets.QCheckBox(u"ä¸‹æ–¹")
+        self.bottom_border_cb = QtWidgets.QCheckBox(u"ÏÂ·½")
         self.bottom_border_cb.setChecked(True)
 
         self.border_color_btn = DongColorButton()
@@ -223,8 +223,18 @@ class DongShotMaskUi(QtWidgets.QDialog):
         self.counter_padding_sb.setMaximum(6)
         self.counter_padding_sb.setButtonSymbols(QtWidgets.QSpinBox.NoButtons)
 
-        self.create_btn = QtWidgets.QPushButton(u"åˆ›å»º")
-        self.delete_btn = QtWidgets.QPushButton(u"åˆ é™¤")
+        self.lab_info = QtWidgets.QLabel(u"")
+        self.lab_info.setStyleSheet('background-color: #202020; color: white;')
+        self.lab_info.setText(u'''      °ïÖú£º
+        {counter}:        ¼ÆÊıÆ÷
+        {scene}:           ³¡¾°Ãû
+        {camera}:         Ïà»úÃû
+        {date}:             ÈÕÆÚ
+        {focalLength}:  Ïà»ú½¹¾à
+        {image=***}:     Í¼Æ¬,Â·¾¶²»´øÒıºÅ£¬ÕıĞ±¸Ü¼´¿É''')
+
+        self.create_btn = QtWidgets.QPushButton(u"´´½¨")
+        self.delete_btn = QtWidgets.QPushButton(u"É¾³ı")
 
         self.refresh_ui()
 
@@ -236,7 +246,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
         camera_form_layout = QtWidgets.QFormLayout()
         camera_form_layout.setSpacing(2)
-        camera_form_layout.addRow(u"ç›¸æœº", camera_layout)
+        camera_form_layout.addRow(u"Ïà»ú", camera_layout)
         camera_form_layout.addRow(self.spacing_widget(), None)
 
         text_form_layout = QtWidgets.QFormLayout()
@@ -253,17 +263,17 @@ class DongShotMaskUi(QtWidgets.QDialog):
         text_color_layout = QtWidgets.QHBoxLayout()
         text_color_layout.addWidget(self.font_color_btn)
         text_color_layout.addSpacing(4)
-        text_color_layout.addWidget(QtWidgets.QLabel(u"é€æ˜åº¦"))
+        text_color_layout.addWidget(QtWidgets.QLabel(u"Í¸Ã÷¶È"))
         text_color_layout.addWidget(self.font_alpha_dsb)
         text_color_layout.addSpacing(4)
-        text_color_layout.addWidget(QtWidgets.QLabel(u"ç¼©æ”¾"))
+        text_color_layout.addWidget(QtWidgets.QLabel(u"Ëõ·Å"))
         text_color_layout.addWidget(self.font_scale_dsb)
         text_color_layout.addStretch()
 
         font_form_layout = QtWidgets.QFormLayout()
         font_form_layout.setSpacing(4)
-        font_form_layout.addRow(u"å­—å·", font_layout)
-        font_form_layout.addRow(u"é¢œè‰²", text_color_layout)
+        font_form_layout.addRow(u"×ÖºÅ", font_layout)
+        font_form_layout.addRow(u"ÑÕÉ«", text_color_layout)
         font_form_layout.addRow(self.spacing_widget(), None)
 
         border_visibility_layout = QtWidgets.QHBoxLayout()
@@ -274,17 +284,17 @@ class DongShotMaskUi(QtWidgets.QDialog):
         border_color_layout = QtWidgets.QHBoxLayout()
         border_color_layout.addWidget(self.border_color_btn)
         border_color_layout.addSpacing(4)
-        border_color_layout.addWidget(QtWidgets.QLabel(u"é€æ˜åº¦"))
+        border_color_layout.addWidget(QtWidgets.QLabel(u"Í¸Ã÷¶È"))
         border_color_layout.addWidget(self.border_transparency_dsb)
         border_color_layout.addSpacing(4)
-        border_color_layout.addWidget(QtWidgets.QLabel(u"ç¼©æ”¾"))
+        border_color_layout.addWidget(QtWidgets.QLabel(u"Ëõ·Å"))
         border_color_layout.addWidget(self.border_scale_dsb)
         border_color_layout.addStretch()
 
         borders_form_layout = QtWidgets.QFormLayout()
         borders_form_layout.setSpacing(2)
-        borders_form_layout.addRow(u"æ–¹ä½:", border_visibility_layout)
-        borders_form_layout.addRow(u"é¢œè‰²", border_color_layout)
+        borders_form_layout.addRow(u"·½Î»:", border_visibility_layout)
+        borders_form_layout.addRow(u"ÑÕÉ«", border_color_layout)
         borders_form_layout.addRow(self.spacing_widget(), None)
 
         counter_padding_layout = QtWidgets.QHBoxLayout()
@@ -293,7 +303,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
         counter_form_layout = QtWidgets.QFormLayout()
         counter_form_layout.setSpacing(4)
-        counter_form_layout.addRow(u"å¸§æ•°å¡«å……", counter_padding_layout)
+        counter_form_layout.addRow(u"Ö¡ÊıÌî³ä", counter_padding_layout)
         counter_form_layout.addRow(self.spacing_widget(), None)
 
         button_layout = QtWidgets.QHBoxLayout()
@@ -305,16 +315,17 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
-        main_layout.addSpacing(6)
+        main_layout.setSpacing(5)
         main_layout.addLayout(camera_form_layout)
-        main_layout.addWidget(DongHeaderWidget(u"æ–‡æœ¬"))
+        main_layout.addWidget(DongHeaderWidget(u"ÎÄ±¾"))
         main_layout.addLayout(text_form_layout)
-        main_layout.addWidget(DongHeaderWidget(u"å­—ç¬¦"))
+        main_layout.addWidget(DongHeaderWidget(u"×Ö·û"))
         main_layout.addLayout(font_form_layout)
-        main_layout.addWidget(DongHeaderWidget(u"é®ç½©"))
+        main_layout.addWidget(DongHeaderWidget(u"ÕÚÕÖ"))
         main_layout.addLayout(borders_form_layout)
-        main_layout.addWidget(DongHeaderWidget(u"å¡«å……"))
+        main_layout.addWidget(DongHeaderWidget(u"Ìî³ä"))
         main_layout.addLayout(counter_form_layout)
+        main_layout.addWidget(self.lab_info)
         main_layout.addLayout(button_layout)
 
     def spacing_widget(self):
@@ -351,7 +362,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
             try:
                 mc.loadPlugin(DongShotMaskUi.PLUG_IN_NAME)
             except:
-                mc.error('æ‰¾ä¸åˆ°æ’ä»¶{}'.format(DongShotMaskUi.PLUG_IN_NAME))
+                mc.error('ÕÒ²»µ½²å¼ş{}'.format(DongShotMaskUi.PLUG_IN_NAME))
                 return False
         return True
 
@@ -360,7 +371,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
     def get_mask(self):
         """
-        è·å–åœºæ™¯å†…æ‰€æœ‰é®ç½©èŠ‚ç‚¹çš„shapeå
+        »ñÈ¡³¡¾°ÄÚËùÓĞÕÚÕÖ½ÚµãµÄshapeÃû
         :return:
         """
         if self.is_plugin_loaded():
@@ -392,7 +403,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
                 mc.delete(mask)
 
     def update_mask(self):
-        mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_CAMERA, self.camera_le.text()])  #ç”Ÿæˆä¸€ä¸ªè‡ªå®šä¹‰å…¨å±€å˜é‡åï¼Œå€¼ä¸ºè¾“å…¥æ¡†å†…å®¹
+        mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_CAMERA, self.camera_le.text()])  #Éú³ÉÒ»¸ö×Ô¶¨ÒåÈ«¾Ö±äÁ¿Ãû£¬ÖµÎªÊäÈë¿òÄÚÈİ
 
         mc.optionVar(sv=[DongShotMaskUi.OPT_VAR_TEXT, self.text_line_edits[0].text()])
         for i in range(1, len(self.text_line_edits)):
@@ -442,7 +453,7 @@ class DongShotMaskUi(QtWidgets.QDialog):
 
         border_vis = self.get_border_visibility()
         mc.setAttr("{0}.topBorder".format(mask), border_vis[0])
-        mc.setAttr("{0}.bottomBorder".format(mask), border_vis[1])
+        mc.setAttr("{0}.buttomBorder".format(mask), border_vis[1])
 
         border_color = self.get_border_color()
         mc.setAttr("{0}.borderColor".format(mask), border_color[0], border_color[1], border_color[2], type="double3")
@@ -475,8 +486,8 @@ class DongShotMaskUi(QtWidgets.QDialog):
         self.counter_padding_sb.setValue(self.get_counter_padding())
 
     def get_camera_name(self):
-        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_CAMERA):  #æ£€æŸ¥è‡ªå®šä¹‰å…¨å±€å˜é‡åæ˜¯å¦å­˜åœ¨
-            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_CAMERA)  #è¿”å›è‡ªå®šä¹‰å˜é‡çš„å€¼
+        if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_CAMERA):  #¼ì²é×Ô¶¨ÒåÈ«¾Ö±äÁ¿ÃûÊÇ·ñ´æÔÚ
+            return mc.optionVar(q=DongShotMaskUi.OPT_VAR_CAMERA)  #·µ»Ø×Ô¶¨Òå±äÁ¿µÄÖµ
 
         return 'all'
 
@@ -540,7 +551,9 @@ class DongShotMaskUi(QtWidgets.QDialog):
     def get_text_list(self):
         if mc.optionVar(ex=DongShotMaskUi.OPT_VAR_TEXT):
             return mc.optionVar(q=DongShotMaskUi.OPT_VAR_TEXT)
-        return ['', '{scene}', '', '{camera}', '', '{counter}']
+        
+
+        return ['{date}', '{focalLength}', '', '', '{camera}', '{counter}']
 
     def on_camera_select_accepted(self):
         selected = self._camera_select_dialog.get_selected()
