@@ -96,7 +96,7 @@ class CoreMaya(object):
                 _shape = mc.blendShape(bs, q=True, g=True)
                 trs = mc.listRelatives(_shape, p=True)[0]
 
-                nam_lis, rot_lis, con_lis = self._from_bs_get_tag_info(bs)
+                nam_lis, rot_lis, con_lis = cls._from_bs_get_tag_info(bs)
                 if trs not in ret_dir.keys():
                     ret_dir[trs] = {}
                 ret_dir[trs][bs] = {'nice_nam': nam_lis, 'root_nam': rot_lis, 'conn_lis': con_lis}
@@ -185,6 +185,175 @@ class ListWidget(QScrollArea):
                 if child.widget() is not None:
                     child.widget().deleteLater()
 
+class ImportTargetWidget(QWidget):
+    checked = Signal()
+    def __init__(self, target, dic_trslate, dic_conn, parent=None):
+        # type: (str, dict[str: list[float, float, float, int]], str, QWidget) -> None
+        super(ImportTargetWidget, self).__init__(parent)
+        self._tag = target
+        self._translte = dic_trslate
+        self._conn = dic_conn
+        self._parent = parent
+
+        self.create_widgets()
+        self.create_layout()
+        self.create_connects()
+
+    def create_widgets(self):
+        self.chk_switch = QCheckBox()
+        self.chk_switch.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.lab_icon = _IconLabel(':/target.png')
+        self.lab_icon.setFixedSize(22, 17)
+        self.lab_nam = QLabel(self._tag)
+        self.lab_nam.setFixedHeight(24)
+        self.lab_nam.setStyleSheet('background-color:#5D5D5D')
+        self.lab_nam.setAlignment(Qt.AlignCenter)
+        self.lab_nam.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.but_ipt = QPushButton()
+        self.but_ipt.setToolTip(self._conn if self._conn else 'None')
+        self.but_ipt.setIcon(QIcon(':/input.png'))
+
+    def create_layout(self):
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.chk_switch)
+        main_layout.addWidget(self.lab_icon)
+        main_layout.addWidget(self.lab_nam)
+        main_layout.addWidget(self.but_ipt)
+
+    def create_connects(self):
+        self.chk_switch.clicked.connect(self.checked.emit)
+        self.but_ipt.clicked.connect(self._select_plug_node)
+
+    def is_checked(self):
+        return self.chk_switch.isChecked()
+
+    def set_checked(self, check):
+        # type: (bool) -> None
+        self.chk_switch.setChecked(check)
+
+    def get_target_nam(self):
+        return self._tag
+
+    def get_translate(self):
+        return self._translte
+
+    def get_conn_plug(self):
+        return self._conn
+
+    def _select_plug_node(self):
+        if self._conn:
+            CoreMaya.select_obj(self._conn.split('.')[0])
+        else:
+            raise TransferError('目标体{}.{}没有上游连接节点'.format(self._parent.get_blend_shape_name(), self._tag))
+
+class ImportBlendShapeWidget(QWidget):
+    checked = Signal()
+    def __init__(self, bs, data, parent=None):
+        # type: (str, dict[str: dict[str: list[int, int, int, int]], str: str|None], QWidget|None) -> None
+        """
+        生成bs控件
+        :param bs: bs节点名
+        :param data: bs节点的信息；{目标体名：{点id名：[x, y, z, 1(切线)], conn：上游节点属性名}}
+        :param parent: 父级控件
+        """
+        super(ImportBlendShapeWidget, self).__init__(parent)
+
+        self._bs = bs
+        self._data = data
+
+        self.create_widgets()
+        self.create_layout()
+        self.create_connects()
+        self._refresh_list()
+
+    def create_widgets(self):
+        self.chk_switch = QCheckBox()
+        self.lab_icon = QLabel()
+        self.lab_icon.setFixedSize(QSize(22, 22))
+        pixmap = QPixmap(':/blendShape.png')
+        scaled_pixmap = pixmap.scaled(self.lab_icon.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.lab_icon.setPixmap(scaled_pixmap)
+        self.but_nam = QPushButton(self._bs)
+        self.but_nam.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.lab_tag_num = QLabel('{}个目标体'.format(self._data.__len__()))
+
+        self.lis_target = ListWidget()
+
+    def create_layout(self):
+        layout_lab = QHBoxLayout()
+        layout_lab.setSpacing(2)
+        layout_lab.addWidget(self.chk_switch)
+        layout_lab.addWidget(self.lab_icon)
+        layout_lab.addWidget(self.but_nam)
+        layout_lab.addWidget(self.lab_tag_num)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(layout_lab)
+        main_layout.addWidget(self.lis_target)
+
+    def create_connects(self):
+        self.chk_switch.stateChanged.connect(lambda _: self.checked.emit())
+        self.chk_switch.clicked.connect(self.set_bs_state)
+        self.but_nam.clicked.connect(self._show_list_widget)
+
+    def is_checked(self):
+        return self.chk_switch.isChecked()
+
+    def set_bs_state(self, state):
+        self._set_target_state(state)
+
+    def set_all_state(self, state):
+        self.chk_switch.setChecked(state)
+        self._set_target_state(state)
+
+    def get_blend_shape_name(self):
+        return self._bs
+
+    def get_target_info(self):
+        # type: () -> dict[str: dict[str: dict[str: dict[str: list[float, float, float, int]], str: str|None]]]
+        """
+        获取该bs项下所有目标体信息
+        :return: {bs节点名: {目标体名: {'translat': {点id名: [x, y, z, 1(切线)]}, 'conn': 上游节点属性名}}}
+        """
+        bs_dir = {self._bs: {}}
+        for i in range(self.lis_target.count()):
+            wgt = self.lis_target.item(i)
+            if not wgt.is_checked():
+                continue
+            tag_dir = {wgt.get_target_nam(): {'translat': wgt.get_translate(), 'conn': wgt.get_conn_plug()}}
+            bs_dir[self._bs].update(tag_dir)
+        return bs_dir
+
+    def _set_target_state(self, state):
+        for i in range(self.lis_target.count()):
+            wgt = self.lis_target.item(i)
+            wgt.set_checked(state)
+
+    def _set_check_state(self):
+        for i in range(self.lis_target.count()):
+            wgt = self.lis_target.item(i)
+            if wgt.is_checked():
+                self.chk_switch.setChecked(True)
+                break
+        else:
+            self.chk_switch.setChecked(False)
+
+    def _show_list_widget(self):
+        self.lis_target.hide() if self.lis_target.isVisible() else self.lis_target.show()
+
+    def _refresh_list(self):
+        """
+        刷新目标体列表
+        :return:
+        """
+        self.lis_target.clear()
+        for tag, info in self._data.items():
+            item = ImportTargetWidget(tag, info['translate'], info['conn'], self)
+            item.checked.connect(self._set_check_state)
+            self.lis_target.add_item(item)
+
 class ImportTransformWidget(QWidget):
     def __init__(self, trs, data, parent=None):
         super(ImportTransformWidget, self).__init__(parent)
@@ -227,16 +396,40 @@ class ImportTransformWidget(QWidget):
         main_layout.addWidget(self.lis_bs)
 
     def create_connects(self):
-        self.chk_switch.stateChanged.connect(self._check_state_change)
+        self.chk_switch.clicked.connect(self.check_state_change)
         self.but_icon.clicked.connect(self._select_mod)
         self.but_nam.clicked.connect(self._show_list_widget)
         self.but_rename.clicked.connect(self._rename_dialog)
 
-    def _check_state_change(self, state):
-        if state == 2:
-            pass
-        elif state == 0:
-            pass
+    def check_state_change(self, state):
+        for i in range(self.lis_bs.count()):
+            wgt = self.lis_bs.item(i)
+            wgt.set_all_state(state)
+
+    def is_input(self):
+        return self.chk_switch.isChecked()
+
+    def get_transform_name(self):
+        """
+        获取该模型项的目标模型名
+        :return:
+        """
+        return self._tag_trs
+
+    def get_blend_shape_info(self):
+        # type: () -> dict[str: dict[str: dict[str: dict[str: dict[str: list[float, float, float, int]], str: str|None]]]]
+        """
+        获取该模型项的所有启用的blendShape的信息
+        :return:
+        """
+        bs_dir = {self._trs: {}}
+        for i in range(self.lis_bs.count()):
+            wgt = self.lis_bs.item(i)
+            if not wgt.is_checked():
+                continue
+            bs_dir[self._trs].update(wgt.get_target_info())
+
+        return bs_dir
 
     def _select_mod(self):
         CoreMaya.select_obj(self._tag_trs)
@@ -249,14 +442,30 @@ class ImportTransformWidget(QWidget):
         self.lis_bs.hide() if self.lis_bs.isVisible() else self.lis_bs.show()
 
     def _rename_dialog(self):
+        """
+        生成字符串输入对话框，修改接受bs数据的模型名
+        :return:
+        """
         txt, ok = QInputDialog.getText(self, '输入要给定模型名', '{} --> '.format(self._trs), text=self._tag_trs)
         if ok and txt:
             self._tag_trs = txt
             self.but_nam.setText('{} --> {}'.format(self._trs, self._tag_trs))
 
-    def _refresh_list(self):
-        pass
+    def _set_check_state(self):
+        for i in range(self.lis_bs.count()):
+            wgt = self.lis_bs.item(i)
+            if wgt.is_checked():
+                self.chk_switch.setChecked(True)
+                break
+        else:
+            self.chk_switch.setChecked(False)
 
+    def _refresh_list(self):
+        self.lis_bs.clear()
+        for bs, bs_info in self._data.items():
+            bs_widget = ImportBlendShapeWidget(bs, bs_info, self)
+            bs_widget.checked.connect(self._set_check_state)
+            self.lis_bs.add_item(bs_widget)
 
 class ImportWidget(QWidget):
     def __init__(self, parent=None):
@@ -272,13 +481,24 @@ class ImportWidget(QWidget):
         self.but_input_data = QPushButton('导入blendShape数据')
         self.lis_trs = ListWidget(self)
 
+        self.chk_conn = QCheckBox('链接目标体驱动')
+        self.but_input_all = QPushButton('按名称导入')
+        self.but_input_select = QPushButton('全部导入到选中模型')
+
     def create_layout(self):
+        layout_input = QHBoxLayout()
+        layout_input.addWidget(self.but_input_all)
+        layout_input.addWidget(self.but_input_select)
+
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(self.but_input_data)
         main_layout.addWidget(self.lis_trs)
+        main_layout.addWidget(self.chk_conn)
+        main_layout.addLayout(layout_input)
 
     def create_connects(self):
         self.but_input_data.clicked.connect(self._input_json)
+        self.but_input_all.clicked.connect(self._input_all)
 
     def _input_json(self):
         file_path = QFileDialog.getOpenFileName(self, '选择blendShape文件', CoreMaya.get_scene_path(), '(*.json)')
@@ -291,13 +511,39 @@ class ImportWidget(QWidget):
 
     def _refresh_bs_list(self):
         self.lis_trs.clear()
-
         if self._data:
             for trs, info in self._data.items():
                 item = ImportTransformWidget(trs, info)
+                item.check_state_change(True)
                 self.lis_trs.add_item(item)
         else:
             raise TransferError('没有找到blendShape数据')
+
+    def get_select_target_info(fun):
+        """
+        在类里面用于装饰同一个类里函数的装饰器
+        :return:
+        """
+        def _warp(self, *args, **kwargs):
+            """
+            获取选中的所有目标体信息，并传递给fun
+            :return:
+            """
+            info_dir = {}
+            for i in range(self.lis_trs.count()):
+                wgt = self.lis_trs.item(i)
+                if not wgt.is_input():
+                    continue
+                info_dir.update(wgt.get_blend_shape_info())
+
+            fun(self, info_dir)
+        return _warp
+
+
+    @get_select_target_info
+    def _input_all(self, bs_info):
+
+        print(bs_info)
 
 class ExportTargetItem(QWidget):
     def __init__(self, bs, nise_nam, root_nam, conn_plug, parent=None):
@@ -438,8 +684,8 @@ class ExportBlendShapeWidget(QWidget):
         :return: {bs节点名：{目标体名: {点id名：[x, y, z, 1(切线)]}， conn：上游连接属性名|None}}
         """
         ret_dir = {}
-        for i in range(self.lis_bs.count()):
-            wgt = self.lis_bs.item(i)
+        for i in range(self.lis_target.count()):
+            wgt = self.lis_target.item(i)
             if wgt.is_checked():
                 if self._bs not in ret_dir.keys():
                     ret_dir[self._bs] = {}
@@ -517,7 +763,7 @@ class ExportTransformWidget(QWidget):
         self.lab_bs_num = QLabel('{}个bs'.format(self._bs_info.__len__()))
         self.lab_bs_num.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        self.lis_target = ListWidget()
+        self.lis_bs = ListWidget()
 
     def create_layout(self):
         layout_lab = QHBoxLayout()
@@ -529,7 +775,7 @@ class ExportTransformWidget(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(layout_lab)
-        main_layout.addWidget(self.lis_target)
+        main_layout.addWidget(self.lis_bs)
 
     def create_connects(self):
         self.but_icon.clicked.connect(self._select_mod)
@@ -553,17 +799,16 @@ class ExportTransformWidget(QWidget):
         return ret_dir
 
     def _refresh_list(self):
-        self.lis_target.clear()
+        self.lis_bs.clear()
         for bs, bs_info in self._bs_info.items():
             bs_widget = ExportBlendShapeWidget(bs, bs_info, self)
-            self.lis_target.add_item(bs_widget)
+            self.lis_bs.add_item(bs_widget)
 
     def _select_mod(self):
         CoreMaya.select_obj(self._trs)
 
     def _show_list_widget(self):
-        self.lis_target.hide() if self.lis_target.isVisible() else self.lis_target.show()
-
+        self.lis_bs.hide() if self.lis_bs.isVisible() else self.lis_bs.show()
 
 class ExportWidget(QWidget):
     def __init__(self, parent=None):
@@ -579,7 +824,7 @@ class ExportWidget(QWidget):
 
         self.lis_trs = ListWidget(self)
 
-        self.cek_box = QCheckBox('记录上游连接')
+        self.cek_box = QCheckBox('记录目标体驱动')
         self.but_export = QPushButton('导出选中的目标体')
 
     def create_layout(self):
