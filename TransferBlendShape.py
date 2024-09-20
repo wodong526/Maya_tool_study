@@ -10,17 +10,36 @@ import os
 import json
 
 import maya.cmds as mc
+import maya.mel as mm
 import maya.OpenMaya as om
 import maya.OpenMayaUI as omui
 
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-from maya.app.renderSetup.views.lightEditor.enterScope import EnterLightScope
+
+from Meta.mhFaceCtrlsAnimsTool import elect_metaFaceCtrl
+from adPose.sync_lib.ad_pose_mb_bs_sdk import bs_sdk
 from shiboken2 import wrapInstance
 
 class TransferError(Exception):
     pass
+
+def _from_target_data_get_nice_info(data):
+    """
+    将整体目标体信息重组为建议的目标体信息
+    :param data:
+    :return: {bs节点名: {目标体名: {点id名: [...]}, 'conn': ...}}
+    """
+    bs_nam = list(data.keys())[0]
+    tag_dir = {}
+    for tag in data.values():
+        for tag_nam, tag_val in tag.items():
+            if tag_nam not in tag_dir.keys():
+                tag_dir[tag_nam] = tag_val
+            else:
+                tag_dir['{}_dup'.format(tag_nam)] = tag_val
+    return bs_nam, tag_dir
 
 ##########文件IO工具类############
 class CoreFile(object):
@@ -31,8 +50,8 @@ class CoreFile(object):
 
 ##########Maya工具类############
 class CoreMaya(object):
-    @classmethod
-    def _from_bs_get_tag_info(cls, bs):
+    @staticmethod
+    def _from_bs_get_tag_info(bs):
         nam_lis = mc.aliasAttr(bs, q=True)[::2]
         con_lis = []
         for tag in nam_lis:
@@ -41,9 +60,57 @@ class CoreMaya(object):
 
         return nam_lis, mc.aliasAttr(bs, q=True)[1::2], con_lis
 
+    @staticmethod
+    def _from_mod_get_blend_shape(mod, bs_nam):
+        # type: (str, str) -> str
+        """
+        获取模型上的bs节点名，如果没有则创建为指定的bs名
+        :param mod: 要获取的bs节点的模型名
+        :param bs_nam: 需要被创建的bs节点名
+        :return: 获取到mod模型的bs节点名
+        """
+        bs = mc.ls(mc.listHistory(mod), typ='blendShape')
+        if not bs:
+            bs = mc.blendShape(mod, n='{}_blendShape'.format(mod) if mc.objExists(bs_nam) else bs_nam, at=True)
+        return bs[0]
+
+    @staticmethod
+    def _do_blend_shape_add_target(bs, tag_nam):
+        # type: (str, str) -> int
+        """
+        向指定bs节点添加一个指定名称的目标体
+        :param bs: 指定的bs节点名
+        :param tag_nam: 要添加的目标体简名
+        :return: 添加的目标体的序号
+        """
+        tag_index = mm.eval('string $duplicateTargets[];'
+                            'doBlendShapeAddTarget("{}", 1, 2, "", 0, 0, $duplicateTargets);'.format(bs))[0]
+        tag_lis = mc.listAttr('{}.w'.format(bs), k=True, m=True)
+        if tag_lis[tag_index][0] != tag_nam and tag_nam not in tag_lis:
+            mm.eval('blendShapeRenameTargetAlias {} {} {};'.format(bs, tag_index, tag_nam))
+        return tag_index
+
+    @classmethod
+    def get_select_mod(cls):
+        # type: () -> [str]
+        """
+        获取选中列表中所有的模型
+        :return:
+        """
+        trs_lis = []
+        for trs in mc.ls(sl=True, typ='transform'):
+            shape = mc.listRelatives(trs, s=True)
+            if shape and mc.objectType(shape[0]) == 'mesh':
+                trs_lis.append(trs)
+
+        if trs_lis:
+            return trs_lis
+        else:
+            raise TransferError('选择对象中没有模型对象', 'error')
+
     @classmethod
     def get_target_translate_info(cls, bs, i):
-        # type: (str, int) -> tuple[list[str], list[tuple[int, int, int, int]]]
+        # type: (str, int) -> tuple[[str], [tuple[int, int, int, int]]]
         """
         通过bs节点与目标体序号获取目标体操作的点与点的位移信息
         :param bs: bs节点
@@ -57,7 +124,23 @@ class CoreMaya(object):
         return components, translate
 
     @classmethod
-    def get_all_blend_shape(self):
+    def set_target_translate_info(cls, bs, index, components, translate):
+        # type: (str, int, list, list) -> None
+        """
+        通过bs节点与目标体序号获取目标体操作的点与点的位移信息
+        :param bs: bs节点
+        :param index: 要设置的目标体的序号
+        :param components: 目标体的点id列表
+        :param translate: 目标体各点的位移列表
+        :return: (点id列表， 变换信息列表)
+        """
+        mc.setAttr('{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem[6000].inputComponentsTarget'
+                   .format(bs, index), components.__len__(), *components, typ='componentList')  # 获取移动了的点的id
+        mc.setAttr('{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem[6000].inputPointsTarget'
+                   .format(bs, index), translate.__len__(), *translate, typ='pointArray')  # 获取每个要移动的点移动的位移，格式为[x, y, z, 1(切线)]
+
+    @classmethod
+    def get_all_blend_shape(cls):
         # type: () -> {str: {str: {str: list}}}
         """
         获取场景中所有blendShape的信息
@@ -68,7 +151,7 @@ class CoreMaya(object):
             _shape = mc.blendShape(bs, q=True, g=True)
             trs = mc.listRelatives(_shape, p=True)[0]
 
-            nam_lis, rot_lis, con_lis = self._from_bs_get_tag_info(bs)
+            nam_lis, rot_lis, con_lis = cls._from_bs_get_tag_info(bs)
             if trs not in ret_dir.keys():
                 ret_dir[trs] = {}
             ret_dir[trs][bs] = {'nice_nam': nam_lis, 'root_nam': rot_lis, 'conn_lis': con_lis}
@@ -82,16 +165,8 @@ class CoreMaya(object):
         获取选中模型的所有blendShape信息
         :return: {模型transform名: {bs节点名: {'nice_nam': nam_lis, 'root_nam': rot_lis, 'conn_lis': con_lis}}}
         """
-        shape_lis = []
-        for trs in mc.ls(sl=True, typ='transform'):
-            _shape = mc.listRelatives(trs, s=True)
-            if _shape:
-                shape_lis.append(_shape[0])
-        if not shape_lis:
-            raise TransferError('选择列表中没有模型对象')
-
         ret_dir = {}
-        for shape in shape_lis:
+        for shape in cls.get_select_mod():
             for bs in mc.ls(mc.listHistory(shape), typ='blendShape'):
                 _shape = mc.blendShape(bs, q=True, g=True)
                 trs = mc.listRelatives(_shape, p=True)[0]
@@ -122,6 +197,32 @@ class CoreMaya(object):
             om.MGlobal.displayWarning(info)
         elif typ == 'error':
             mc.error(info)
+
+    @classmethod
+    def set_blend_shape(cls, mod, tag_info, is_connect):
+        # type: (str, dict, bool) -> None
+        """
+        向指定模型添加目标体
+        :param mod: 模型名
+        :param tag_info: 目标体信息
+        :param is_connect: 是否链接上下游
+        :return:
+        """
+        sor_bs_name, bs_info = _from_target_data_get_nice_info(tag_info)
+        new_bs_nam = CoreMaya._from_mod_get_blend_shape(mod, sor_bs_name)
+        for tag, tag_val in bs_info.items():
+            index = cls._do_blend_shape_add_target(new_bs_nam, tag)
+            components = list(tag_val['translat'].keys())
+            translate = list(tag_val['translat'].values())
+
+            cls.set_target_translate_info(new_bs_nam, index, components, translate)
+            if is_connect and tag_val['conn']:
+                plug_nam = mc.listAttr('{}.w'.format(new_bs_nam), k=True, m=True)[index]
+                if mc.objExists(tag_val['conn']):
+                    mc.connectAttr(tag_val['conn'], '{}.{}'.format(new_bs_nam, plug_nam))
+                else:
+                    cls.output_info('源目标体{}的现目标体{}的驱动属性{}不存在'.format(tag, plug_nam, tag_val['conn']),
+                                    'warning')
 
 ##########UI类############
 class _IconLabel(QLabel):
@@ -422,14 +523,14 @@ class ImportTransformWidget(QWidget):
         获取该模型项的所有启用的blendShape的信息
         :return:
         """
-        bs_dir = {self._trs: {}}
+        bs_dir = {}
         for i in range(self.lis_bs.count()):
             wgt = self.lis_bs.item(i)
             if not wgt.is_checked():
                 continue
-            bs_dir[self._trs].update(wgt.get_target_info())
+            bs_dir.update(wgt.get_target_info())
 
-        return bs_dir
+        return {self._tag_trs: bs_dir}
 
     def _select_mod(self):
         CoreMaya.select_obj(self._tag_trs)
@@ -499,6 +600,7 @@ class ImportWidget(QWidget):
     def create_connects(self):
         self.but_input_data.clicked.connect(self._input_json)
         self.but_input_all.clicked.connect(self._input_all)
+        self.but_input_select.clicked.connect(self._input_select)
 
     def _input_json(self):
         file_path = QFileDialog.getOpenFileName(self, '选择blendShape文件', CoreMaya.get_scene_path(), '(*.json)')
@@ -539,11 +641,16 @@ class ImportWidget(QWidget):
             fun(self, info_dir)
         return _warp
 
-
     @get_select_target_info
     def _input_all(self, bs_info):
+        for mod, bs_data in bs_info.items():
+            CoreMaya.set_blend_shape(mod, bs_data, self.chk_conn.isChecked())
 
-        print(bs_info)
+    @get_select_target_info
+    def _input_select(self, bs_info):
+        mod = CoreMaya.get_select_mod()[0]
+        for _, bs_data in bs_info:
+            CoreMaya.set_blend_shape(mod, bs_data, self.chk_conn.isChecked())
 
 class ExportTargetItem(QWidget):
     def __init__(self, bs, nise_nam, root_nam, conn_plug, parent=None):
@@ -708,8 +815,8 @@ class ExportBlendShapeWidget(QWidget):
         判断子项是否全选
         :return: bool
         """
-        for i in range(self.lis_bs.count()):
-            if not self.lis_bs.item(i).is_checked():
+        for i in range(self.lis_target.count()):
+            if not self.lis_target.item(i).is_checked():
                 return False
         else:
             return True
