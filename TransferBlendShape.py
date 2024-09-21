@@ -1034,18 +1034,17 @@ class ExportWidget(QWidget):
             raise RuntimeError('没有选中任何目标体')
 
     def _filtration_plug(self, data):
-        # type: (list[dict[str: dict[str: dict[str: dict[str: list[int, int, int, int]], str: str|None]]]]) -> None
+        # type: (dict[str: dict[str: dict[str: dict[str: [str], str: list[int, int, int, int], str: str|None]]]]) -> None
         """
         若未勾选记录上游连接，将上游连接过滤
         列表和字典均为可变类型，所以直接操作参数即可，无需返回
-        :param data: [{trs节点名：{bs节点名：{目标体名: {点id名：[x, y, z, 1(切线)]}， conn：上游连接属性名|None}}}]
+        :param data: {trs节点名：{bs节点名：{目标体名: {'components': ['vtx[id]'], 'translates'：[x, y, z, 1(切线)]， 'conn'：上游连接属性名|None}}}}
         """
         if not self.cek_box.isChecked():
-            for _info in data:
-                for trs, bs_info in _info.items():
-                    for bs, target_info in bs_info.items():
-                        for target, info in target_info.items():  # info为{'translate': trans_dir, 'conn': conn_plug}
-                            info['conn'] = None
+            for trs, bs_info in data.items():
+                for bs, target_info in bs_info.items():
+                    for target, info in target_info.items():  # info为{'translate': trans_dir, 'conn': conn_plug}
+                        info['conn'] = None
 
     def _refresh_list(self, bs_info):
         self.lis_trs.clear()
