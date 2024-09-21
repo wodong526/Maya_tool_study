@@ -3,11 +3,13 @@
 #QQ: 1915367400
 #Github: https://github.com/wodong526
 #Bilibili: https://space.bilibili.com/381417672
+#Gitee: https://gitee.com/woDong_study
 #时间：2024/9/16, 上午3:45
 #文件：TransferBlendShape
 
 import os
 import json
+from fnmatch import translate
 
 import maya.cmds as mc
 import maya.mel as mm
@@ -17,13 +19,14 @@ import maya.OpenMayaUI as omui
 from PySide2.QtWidgets import *
 from PySide2.QtCore import *
 from PySide2.QtGui import *
-
-from Meta.mhFaceCtrlsAnimsTool import elect_metaFaceCtrl
-from adPose.sync_lib.ad_pose_mb_bs_sdk import bs_sdk
 from shiboken2 import wrapInstance
+
+_version = '1.1.1'
+
 
 class TransferError(Exception):
     pass
+
 
 def _from_target_data_get_nice_info(data):
     """
@@ -41,12 +44,14 @@ def _from_target_data_get_nice_info(data):
                 tag_dir['{}_dup'.format(tag_nam)] = tag_val
     return bs_nam, tag_dir
 
+
 ##########文件IO工具类############
 class CoreFile(object):
     @classmethod
     def save_json_data(cls, path, data):
         with open(path, "w") as f:
             json.dump(data, f, indent=4)
+
 
 ##########Maya工具类############
 class CoreMaya(object):
@@ -88,6 +93,9 @@ class CoreMaya(object):
         tag_lis = mc.listAttr('{}.w'.format(bs), k=True, m=True)
         if tag_lis[tag_index][0] != tag_nam and tag_nam not in tag_lis:
             mm.eval('blendShapeRenameTargetAlias {} {} {};'.format(bs, tag_index, tag_nam))
+
+        mc.setAttr('{}.w[{}]'.format(bs, tag_index), 0)
+        mm.eval('updateBlendShapeEditHUD;')
         return tag_index
 
     @classmethod
@@ -137,7 +145,8 @@ class CoreMaya(object):
         mc.setAttr('{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem[6000].inputComponentsTarget'
                    .format(bs, index), components.__len__(), *components, typ='componentList')  # 获取移动了的点的id
         mc.setAttr('{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem[6000].inputPointsTarget'
-                   .format(bs, index), translate.__len__(), *translate, typ='pointArray')  # 获取每个要移动的点移动的位移，格式为[x, y, z, 1(切线)]
+                   .format(bs, index), translate.__len__(), *translate,
+                   typ='pointArray')  # 获取每个要移动的点移动的位移，格式为[x, y, z, 1(切线)]
 
     @classmethod
     def get_all_blend_shape(cls):
@@ -212,8 +221,8 @@ class CoreMaya(object):
         new_bs_nam = CoreMaya._from_mod_get_blend_shape(mod, sor_bs_name)
         for tag, tag_val in bs_info.items():
             index = cls._do_blend_shape_add_target(new_bs_nam, tag)
-            components = list(tag_val['translat'].keys())
-            translate = list(tag_val['translat'].values())
+            components = tag_val['components']
+            translate = tag_val['translates']
 
             cls.set_target_translate_info(new_bs_nam, index, components, translate)
             if is_connect and tag_val['conn']:
@@ -223,6 +232,22 @@ class CoreMaya(object):
                 else:
                     cls.output_info('源目标体{}的现目标体{}的驱动属性{}不存在'.format(tag, plug_nam, tag_val['conn']),
                                     'warning')
+
+    @classmethod
+    def undo_info(cls, typ):
+        # type: (str) -> None
+        """
+        创建撤销块
+        :param typ:生成撤销还是关闭撤销
+        :return:
+        """
+        if typ == 'open':
+            mc.undoInfo(ock=True)
+        elif typ == 'close':
+            mc.undoInfo(cck=True)
+        else:
+            cls.output_info('无效的参数：{}'.format(typ), 'error')
+
 
 ##########UI类############
 class _IconLabel(QLabel):
@@ -236,7 +261,7 @@ class _IconLabel(QLabel):
         super(_IconLabel, self).paintEvent(e)
         painter = QPainter(self)
         if self.width() > self._width or self.height() > self._height:
-            painter.drawImage((self.width()-self._width)//2, (self.height()-self._height)//2, self._image)
+            painter.drawImage((self.width() - self._width) // 2, (self.height() - self._height) // 2, self._image)
         else:
             painter.drawImage(0, 0, self._image)
 
@@ -279,6 +304,14 @@ class ListWidget(QScrollArea):
         """
         return self.main_layout.itemAt(i).widget()
 
+    def items(self):
+        # type: () -> list[QWidget]
+        """
+        获取所有子项
+        :return: [控件1, 控件2, ...]
+        """
+        return [self.main_layout.itemAt(i).widget() for i in range(self.main_layout.count())]
+
     def clear(self):
         while self.main_layout.count():
             child = self.main_layout.takeAt(0)
@@ -286,13 +319,16 @@ class ListWidget(QScrollArea):
                 if child.widget() is not None:
                     child.widget().deleteLater()
 
+
 class ImportTargetWidget(QWidget):
     checked = Signal()
-    def __init__(self, target, dic_trslate, dic_conn, parent=None):
-        # type: (str, dict[str: list[float, float, float, int]], str, QWidget) -> None
+
+    def __init__(self, target, components_lis, translates_lis, dic_conn, parent=None):
+        # type: (str, list, list, str, QWidget|None) -> None
         super(ImportTargetWidget, self).__init__(parent)
         self._tag = target
-        self._translte = dic_trslate
+        self._translates = translates_lis
+        self._components = components_lis
         self._conn = dic_conn
         self._parent = parent
 
@@ -336,8 +372,9 @@ class ImportTargetWidget(QWidget):
     def get_target_nam(self):
         return self._tag
 
-    def get_translate(self):
-        return self._translte
+    def get_translate_info(self):
+        # type: () -> (list, list)
+        return self._components, self._translates
 
     def get_conn_plug(self):
         return self._conn
@@ -348,14 +385,16 @@ class ImportTargetWidget(QWidget):
         else:
             raise TransferError('目标体{}.{}没有上游连接节点'.format(self._parent.get_blend_shape_name(), self._tag))
 
+
 class ImportBlendShapeWidget(QWidget):
     checked = Signal()
+
     def __init__(self, bs, data, parent=None):
-        # type: (str, dict[str: dict[str: list[int, int, int, int]], str: str|None], QWidget|None) -> None
+        # type: (str, dict[str: dict[str: [str], str: [int, int, int, int], str: str|None]], QWidget|None) -> None
         """
         生成bs控件
         :param bs: bs节点名
-        :param data: bs节点的信息；{目标体名：{点id名：[x, y, z, 1(切线)], conn：上游节点属性名}}
+        :param data: bs节点的信息；{目标体名：{components': ['vtx[id]'], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}}
         :param parent: 父级控件
         """
         super(ImportBlendShapeWidget, self).__init__(parent)
@@ -380,6 +419,7 @@ class ImportBlendShapeWidget(QWidget):
         self.lab_tag_num = QLabel('{}个目标体'.format(self._data.__len__()))
 
         self.lis_target = ListWidget()
+        self.lis_target.hide()
 
     def create_layout(self):
         layout_lab = QHBoxLayout()
@@ -397,7 +437,7 @@ class ImportBlendShapeWidget(QWidget):
     def create_connects(self):
         self.chk_switch.stateChanged.connect(lambda _: self.checked.emit())
         self.chk_switch.clicked.connect(self.set_bs_state)
-        self.but_nam.clicked.connect(self._show_list_widget)
+        self.but_nam.clicked.connect(self.show_list_widget)
 
     def is_checked(self):
         return self.chk_switch.isChecked()
@@ -413,17 +453,20 @@ class ImportBlendShapeWidget(QWidget):
         return self._bs
 
     def get_target_info(self):
-        # type: () -> dict[str: dict[str: dict[str: dict[str: list[float, float, float, int]], str: str|None]]]
+        # type: () -> dict[str: dict[str: dict[str: [str], str: list[float, float, float, int], str: str|None]]]
         """
         获取该bs项下所有目标体信息
-        :return: {bs节点名: {目标体名: {'translat': {点id名: [x, y, z, 1(切线)]}, 'conn': 上游节点属性名}}}
+        :return: {bs节点名: {目标体名: {'components': ['vtx[id]'], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}}}
         """
         bs_dir = {self._bs: {}}
         for i in range(self.lis_target.count()):
             wgt = self.lis_target.item(i)
             if not wgt.is_checked():
                 continue
-            tag_dir = {wgt.get_target_nam(): {'translat': wgt.get_translate(), 'conn': wgt.get_conn_plug()}}
+
+            components, translates = wgt.get_translate_info()
+            tag_dir = {
+                wgt.get_target_nam(): {'components': components, 'translates': translates, 'conn': wgt.get_conn_plug()}}
             bs_dir[self._bs].update(tag_dir)
         return bs_dir
 
@@ -441,7 +484,7 @@ class ImportBlendShapeWidget(QWidget):
         else:
             self.chk_switch.setChecked(False)
 
-    def _show_list_widget(self):
+    def show_list_widget(self):
         self.lis_target.hide() if self.lis_target.isVisible() else self.lis_target.show()
 
     def _refresh_list(self):
@@ -451,9 +494,10 @@ class ImportBlendShapeWidget(QWidget):
         """
         self.lis_target.clear()
         for tag, info in self._data.items():
-            item = ImportTargetWidget(tag, info['translate'], info['conn'], self)
+            item = ImportTargetWidget(tag, info['components'], info['translates'], info['conn'], self)
             item.checked.connect(self._set_check_state)
             self.lis_target.add_item(item)
+
 
 class ImportTransformWidget(QWidget):
     def __init__(self, trs, data, parent=None):
@@ -518,10 +562,10 @@ class ImportTransformWidget(QWidget):
         return self._tag_trs
 
     def get_blend_shape_info(self):
-        # type: () -> dict[str: dict[str: dict[str: dict[str: dict[str: list[float, float, float, int]], str: str|None]]]]
+        # type: () -> dict[str: dict[str: dict[str: dict[str: [str], str: list[float, float, float, int], str: str|None]]]]
         """
         获取该模型项的所有启用的blendShape的信息
-        :return:
+        :return:{目标模型名：{bs节点名：{目标体名: {'components': ['vtx[id]'], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}}}}
         """
         bs_dir = {}
         for i in range(self.lis_bs.count()):
@@ -567,6 +611,7 @@ class ImportTransformWidget(QWidget):
             bs_widget = ImportBlendShapeWidget(bs, bs_info, self)
             bs_widget.checked.connect(self._set_check_state)
             self.lis_bs.add_item(bs_widget)
+
 
 class ImportWidget(QWidget):
     def __init__(self, parent=None):
@@ -626,19 +671,24 @@ class ImportWidget(QWidget):
         在类里面用于装饰同一个类里函数的装饰器
         :return:
         """
+
         def _warp(self, *args, **kwargs):
             """
             获取选中的所有目标体信息，并传递给fun
             :return:
             """
             info_dir = {}
-            for i in range(self.lis_trs.count()):
-                wgt = self.lis_trs.item(i)
+            for wgt in self.lis_trs.items():
                 if not wgt.is_input():
                     continue
                 info_dir.update(wgt.get_blend_shape_info())
 
-            fun(self, info_dir)
+            try:
+                CoreMaya.undo_info('open')
+                fun(self, info_dir)
+            finally:
+                CoreMaya.undo_info('close')
+
         return _warp
 
     @get_select_target_info
@@ -649,8 +699,9 @@ class ImportWidget(QWidget):
     @get_select_target_info
     def _input_select(self, bs_info):
         mod = CoreMaya.get_select_mod()[0]
-        for _, bs_data in bs_info:
+        for _, bs_data in bs_info.items():
             CoreMaya.set_blend_shape(mod, bs_data, self.chk_conn.isChecked())
+
 
 class ExportTargetItem(QWidget):
     def __init__(self, bs, nise_nam, root_nam, conn_plug, parent=None):
@@ -661,8 +712,8 @@ class ExportTargetItem(QWidget):
         self.root_nam = root_nam
         self.conn_plug = conn_plug
 
-        self._id_lis = []
-        self._translate_lis = []
+        self._comps = []
+        self._translates = []
 
         self.create_widgets()
         self.create_layout()
@@ -724,21 +775,21 @@ class ExportTargetItem(QWidget):
         :param translate_lis: 目标体的平移列表
         :return:
         """
-        self._id_lis = id_lis
-        self._translate_lis = translate_lis
+        self._comps = id_lis
+        self._translates = translate_lis
 
     def get_nice_name(self):
         # type: () -> str
         return self.nise_nam
 
     def get_translate_info(self):
-        # type: () -> dict[str: dict[str: list[int, int, int, int]], str: str:None]
+        # type: () -> dict[str: [str], str: [int, int, int, int], str: str:None]
         """
         获取目标体的id列表和平移列表
-        :return:{translate: {点id: [x, y, z, 1(切线)]}, 'conn': 上游连接属性名|None}
+        :return:{'components': ['vtx[id]', ...], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}
         """
-        trans_dir = {point: translate for point, translate in zip(self._id_lis, self._translate_lis)}
-        return {'translate': trans_dir, 'conn': self.conn_plug}
+        return {'components': self._comps, 'translates': self._translates, 'conn': self.conn_plug}
+
 
 class ExportBlendShapeWidget(QWidget):
     def __init__(self, bs, tag_info, parent=None):
@@ -785,10 +836,10 @@ class ExportBlendShapeWidget(QWidget):
         self.but_select.clicked.connect(self._set_all_target_slate)
 
     def get_target_info(self):
-        # type: () -> dict[str: dict[str: dict[str: list[int, int, int, int]], str: str|None]]
+        # type: () -> dict[str: dict[str: dict[str: [str], str: [int, int, int, int], str: str:None]]]
         """
         获取该blendShape节点下勾选的目标体的信息
-        :return: {bs节点名：{目标体名: {点id名：[x, y, z, 1(切线)]}， conn：上游连接属性名|None}}
+        :return: {bs节点名：{目标体名: {'components': ['vtx[id]', ...], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}}}
         """
         ret_dir = {}
         for i in range(self.lis_target.count()):
@@ -849,6 +900,7 @@ class ExportBlendShapeWidget(QWidget):
         """
         self.lis_target.hide() if self.lis_target.isVisible() else self.lis_target.show()
 
+
 class ExportTransformWidget(QWidget):
     def __init__(self, trs, bs_info, parent=None):
         super(ExportTransformWidget, self).__init__(parent)
@@ -889,10 +941,10 @@ class ExportTransformWidget(QWidget):
         self.but_nam.clicked.connect(self._show_list_widget)
 
     def get_blend_shape_info(self):
-        # type: () -> dict[str: dict[str: dict[str: dict[str: list[int, int, int, int]], str: str|None]]]
+        # type: () -> dict[str: dict[str: dict[str: dict[str: [str], str: [int, int, int, int], str: str|None]]]]
         """
         获取该transform节点下勾选的blendShape节点的信息
-        :return: {trs节点名：{bs节点名：{目标体名: {点id名：[x, y, z, 1(切线)]}， conn：上游连接属性名|None}}}
+        :return: {trs节点名：{bs节点名：{目标体名: {'components': ['vtx[id]'], 'translates': [x, y, z, 1(切线)], 'conn': 上游连接属性名|None}}}}
         """
         ret_dir = {}
         for i in range(self.lis_bs.count()):
@@ -901,7 +953,7 @@ class ExportTransformWidget(QWidget):
             if info:
                 if self._trs not in ret_dir.keys():
                     ret_dir[self._trs] = {}
-                ret_dir[self._trs] = info
+                ret_dir[self._trs].update(info)
 
         return ret_dir
 
@@ -916,6 +968,7 @@ class ExportTransformWidget(QWidget):
 
     def _show_list_widget(self):
         self.lis_bs.hide() if self.lis_bs.isVisible() else self.lis_bs.show()
+
 
 class ExportWidget(QWidget):
     def __init__(self, parent=None):
@@ -966,9 +1019,8 @@ class ExportWidget(QWidget):
         :return:
         """
         target_info = {}
-        for i in range(self.lis_trs.count()):
-            wgt = self.lis_trs.item(i)
-            target_info.update(wgt.get_blend_shape_info())# 将模型信息字典中的所有元素添加到target_info字典
+        for wgt in self.lis_trs.items():
+            target_info.update(wgt.get_blend_shape_info())  # 将模型信息字典中的所有元素添加到target_info字典
 
         if target_info:
             self._filtration_plug(target_info)
@@ -992,7 +1044,7 @@ class ExportWidget(QWidget):
             for _info in data:
                 for trs, bs_info in _info.items():
                     for bs, target_info in bs_info.items():
-                        for target, info in target_info.items():# info为{'translate': trans_dir, 'conn': conn_plug}
+                        for target, info in target_info.items():  # info为{'translate': trans_dir, 'conn': conn_plug}
                             info['conn'] = None
 
     def _refresh_list(self, bs_info):
@@ -1005,7 +1057,7 @@ class ExportWidget(QWidget):
 class TransferWindow(QMainWindow):
     def __init__(self):
         super(TransferWindow, self).__init__(wrapInstance(int(omui.MQtUtil.mainWindow()), QWidget))
-        self.setWindowTitle('Transfer BlendShape')
+        self.setWindowTitle('传递blendShape工具 {}'.format(_version))
         self.resize(500, 500)
 
         self.create_widgets()
@@ -1023,6 +1075,10 @@ class TransferWindow(QMainWindow):
         self.setCentralWidget(self.tab_wgt)
 
 
-
-transfer_tool = TransferWindow()
-transfer_tool.show()
+try:
+    transfer_tool.close()
+except:
+    pass
+finally:
+    transfer_tool = TransferWindow()
+    transfer_tool.show()
