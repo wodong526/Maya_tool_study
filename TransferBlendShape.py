@@ -276,7 +276,7 @@ class ListWidget(QScrollArea):
 
     def create_widget(self):
         self.main_widget = QWidget(self)
-        self.main_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.main_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setWidget(self.main_widget)
 
     def create_layout(self):

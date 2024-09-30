@@ -29,10 +29,14 @@
 - placeTool：刷草种树工具
 - retimeingTool：重排序时间工具，对应zurbrigg的retimingTool教程
 - trackTool：履带工具
+- TransferBlendShape：传递blendShape工具
 - meshRay：模型射线检测工具
 
 ---
 ### **更新日期:**
+**2024.9.30**
+* 添加传递blendShape工具
+
 **2024.4.2**
 * 添加OpenMaya1.0射线检测工具
 
